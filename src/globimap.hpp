@@ -214,10 +214,10 @@ public:
   void configure(size_t _d, size_t logm) {
     d = _d;
     mask = (static_cast<uint64_t>(1) << logm) - 1;
-    std::cout << "logm:" << logm << "mask=" << mask << std::hex << "0x" << mask
+    std::cout << "logm = " << logm << " mask = " << mask << std::hex << "0x" << mask
               << std::dec << std::endl;
     filter.resize(mask + 1);
-    std::cout << "filter.size=" << filter.size() << std::endl;
+    std::cout << "filter.size = " << filter.size() << std::endl;
   }
 
   std::string summary() {
@@ -300,11 +300,11 @@ processing is parallel
       buf += ch;
   }
 
-  void frombuffer(std::string &buf, size_t n) {
+  void from_buffer(const unsigned char *buf, size_t buf_size, size_t n) {
     filter.resize(n);
     size_t k = 0;
-    for (size_t i = 0; i < buf.size(); i++) {
-      char ch = buf[i];
+    for (size_t i = 0; i < buf_size; i++) {
+      char ch = *(buf + i);
       for (size_t j = 0; j < 8; j++)
         if (k < n)
           filter[k++] = ch & (1 << j);

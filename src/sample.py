@@ -2,6 +2,7 @@ import numpy as np
 import globimap as gm
 from matplotlib import pyplot as plt
 from tqdm import tqdm
+import pickle
 
 
 class cfg:
@@ -59,3 +60,9 @@ if __name__ == "__main__":
     nerror = np.sum(result != patch)
     ber = float(nerror) / np.prod(patch.shape)
     print("Have %d errors for a BER of %f" % (nerror, ber))
+    buf = m.get_buffer()
+    with open("buffer.bin", "wb") as file:
+        pickle.dump(buf, file)
+    print(buf[:10], len(buf), 8* len(buf))
+    m.from_buffer(buf)
+    print(m.summary())
