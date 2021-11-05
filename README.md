@@ -11,98 +11,14 @@ The following images illustrate the power by showing urban regions over Europe b
 ## 8 MB
 There is some noise, but the structures are clear
 
-![8 MB](globimap-scale-with-m-26.png)
+![8 MB](doc/img/globimap-scale-with-m-26.png)
 
 ## 64 MB
 Errors are already rare.
 
-![64 MB](globimap-scale-with-m-29.png)
+![64 MB](doc/img/globimap-scale-with-m-29.png)
 
 Note that we have an error correction methodology in the paper allowing you to have an exact representation!
-
-
-# Building
-
-This is an illustrative library and needs a lot of up-to-date dependencies to work. It has been tested on Debian and Ubuntu,
-should work with minor changes on all major platforms. But you have to make sure some things are in place:
-
-## Python Build Environment
-
-You should have headers and libraries for python installed. The Makefile uses
-```
-pkg-config --cflags python
-```
-and
-```
-pkg-config --libs python
-```
-
-These should return the right linker flags.
-
-## Install Boost
-Download a recent version of boost (new enoguh, probably not the one from your distribution, but who knows).
-For this project, I was using Boost 1.71_0. Download the source, go to the directory and
-```
-./bootstrap.sh --with-libraries="python,system"
-./b2 -j8
-sudo ./b2 install
-```
-This should bring libraries to /usr/local/lib, which we will be using. It can be easier for you not having installed another version of boost like the old ones from your distribution. But it is possible...
-
-## Install Boost::Numpy (before was Boost::Python::Numpy, now it is independent)
-Roughly like this:
-```
-git clone https://github.com/ndarray/Boost.NumPy
-cd Boost.Numpy
-mkdir build
-cd build
-cmake ..
-make 
-sudo make install
-```
-This is actually, where the build system failed for my Debian mixed system with Python2 and Python3. Building Boost without python3 support solved the problem for me. If needed, you can do this temporarily or in some Docker container.
-
-## Now some minor changes:
-Boost has built a lot of python libraries for you, but they are named after the version (e.g., libbooost_python27.so). These are (currently) hardcoded in the Makefile. Update the Makefile, if your names differ.
-
-
-## Now do it
-In the directory, you should just make:
-```
-make
-```
-This creates a globimap.so, which you can put to your python path or into the project directories where you want to work.
-If this is in the current directory, you can import it as a library, for example:
-
-```
-martin@werner:~/git/globimap/src$ python
-Python 2.7.16 (default, Apr  6 2019, 01:42:57) 
-[GCC 8.3.0] on linux2
-Type "help", "copyright", "credits" or "license" for more information.
->>> import globimap as gm;
->>> 
-```
-This might fail, if you did not reboot or do anything after building all the shared libraries. In this case, it looks like
-this:
-```
-martin@werner:~/git/globimap/src$ python
-Python 2.7.16 (default, Apr  6 2019, 01:42:57) 
-[GCC 8.3.0] on linux2
-Type "help", "copyright", "credits" or "license" for more information.
->>> import globimap as gm;
-Traceback (most recent call last):
-  File "<stdin>", line 1, in <module>
-ImportError: libboost_numpy27.so.1.71.0: cannot open shared object file: No such file or directory
->>> 
-```
-and you only need to refresh the linker using ldconfig
-```
-martin@werner:~/git/globimap/src$ sudo ldconfig
-[sudo] Passwort für martin: 
-```
-
-# Using the illustrative implementation:
-
 
 # API Overview
 
@@ -123,17 +39,16 @@ The functions are:
 - map(mat,o0,o1): basically "places" the matrix mat at o0, o1 setting values, which must be binary.
 - enforce(mat, o0,o1): basically adds error correction information for the region map with these parameters would affect.
 
-Some patterns / remarks:
+
+Some remarks:
 
 - you should !not! call correct without rasterize. Rasterize uses the probabilistic layer and correct applies error correction to this very same storage.
 - If you don't call put (or map) after using enforce, you are guaranteed to have no errors. If you add something, new errors can appear.
 
 
-# A nice example application: Sierpinski's Triangle
+# An example application: Sierpinski's Triangle
 
-
-
-In [src/sample.py](src/sample.py) you find a complete walk-through of how globimaps can be applied. To keep this git small, we generate
+In [example_sierpinski.py](example_sierpinski.py) you find a complete walk-through of how globimaps can be applied. To keep this git small, we generate
 a sparse dataset algorithmically, in fact, we generate a point cloud that is dense in Sierpinski's triangle, that is, for
 n to infinity, this becomes the Sierpinski triangle. In this way, our dataset is generated in 12 LOCs instead of downloading
 a few megabytes.
@@ -180,7 +95,7 @@ That is, first of all, the capacity is used well (about 0.53 FOZ), the ECI is 16
 
 And it shows the result as a single plot like this one:
 
-![Sierpinski with 1 MB](sierpinski.png)
+![Sierpinski with 1 MB](doc/img/sierpinski.png)
 
 If you now go a bit more agressive, you can chose half a megabyte for starge.As a consequence,
 the number of hash functions should (roughly) be half. The following image has been generated with
@@ -188,7 +103,7 @@ the number of hash functions should (roughly) be half. The following image has b
 of errors is only 50,633, that is 200k of error correction information (2x 2 byte per pixel). Hence, an error-free
 data structure consumes only about 700k, much less than the one megabyte we chose for the almost error-free version.
 
-![Sierpinski with 0.5 MB](sierpinski_small.png)
+![Sierpinski with 0.5 MB](doc/img/sierpinski_small.png)
 
 # Resources
 

@@ -44,9 +44,28 @@ void map_matrix(const py::array_t<double> &self,
   }
   std::cout << std::endl;
 }
+void map_pointcloud(const py::array_t<double> &self,
+                std::function<void(int, int)> f) {
+  if (self.ndim() != 2)
+    throw(std::runtime_error("2D array expected"));
+  auto s1 = self.strides(0);
+  auto s2 = self.strides(1);
+  const char *data = reinterpret_cast<const char *>(self.data());
+
+  for (int i1 = 0; i1 < self.shape(0); i1++) {
+      size_t offset0 = i1 * s1 ;
+      size_t offset1 = i1 * s1 + s2;
+      // std::cout <<"("<< offset<<", "<<i1 <<", "<<i2 <<"), ";
+      const double *d0 = reinterpret_cast<const double *>(data + offset0);
+      const double *d1 = reinterpret_cast<const double *>(data + offset1);
+      f((int)*d0, (int)*d1);
+    
+  }
+  std::cout << std::endl;
+}
 
 // This wil be our implementation in C++ of a Python class globimap.
-typedef GloBiMap<bool> globimap_t;
+typedef GloBiMap<uint8_t> globimap_t;
 
 // The module begins
 PYBIND11_MODULE(globimap, m) {
@@ -68,8 +87,16 @@ PYBIND11_MODULE(globimap, m) {
            +[](globimap_t &self, uint32_t x, uint32_t y) {
              self.put({x, y});
            })
+      .def("put_v",
+           +[](globimap_t &self, uint32_t x, uint32_t y) {
+             self.put({x, y});
+           })
       .def("get",
            +[](globimap_t &self, uint32_t x, uint32_t y) -> bool {
+             return self.get_v({x, y});
+           })
+      .def("get_v",
+           +[](globimap_t &self, uint32_t x, uint32_t y) -> uint8_t {
              return self.get({x, y});
            })
       .def("configure",
@@ -90,6 +117,22 @@ PYBIND11_MODULE(globimap, m) {
                            static_cast<uint32_t>(o1 + i1)});
              });
            })
+      .def("map_pointcloud",
+           +[](globimap_t &self, py::array points, int o0, int o1) {
+              map_pointcloud(points, [&](int i0, int i1){
+                self.put({static_cast<uint32_t>(o0 + i0),
+                         static_cast<uint32_t>(o1 + i1)});
+           
+             });
+           })
+      .def("map_pointcloud_v",
+           +[](globimap_t &self, py::array points, int o0, int o1) {
+              map_pointcloud(points, [&](int i0, int i1){
+                self.put_v({static_cast<uint32_t>(o0 + i0),
+                         static_cast<uint32_t>(o1 + i1)});
+           
+             });
+           })
       .def("enforce",
            +[](globimap_t &self, py::array mat, int o0, int o1) {
              map_matrix(mat, [&](int i0, int i1, double v) {
@@ -101,12 +144,15 @@ PYBIND11_MODULE(globimap, m) {
                }
              });
            })
-      .def("get_buffer", +[](globimap_t &self) -> py::array_t<uint8_t> {
-        std::string buf;
-        self.tobuffer(buf);
-        return py::array_t<uint8_t>(buf.length(), reinterpret_cast<const uint8_t*>(buf.data()));
-      })
-      .def("from_buffer", +[](globimap_t &self, py::array_t<uint8_t> buf) -> void {
-        self.from_buffer(buf.data(), buf.size(), buf.size()*8);
-      });
+      .def("get_buffer",
+           +[](globimap_t &self) -> py::array_t<uint8_t> {
+             std::string buf;
+             self.tobuffer(buf);
+             return py::array_t<uint8_t>(
+                 buf.length(), reinterpret_cast<const uint8_t *>(buf.data()));
+           })
+      .def("from_buffer",
+           +[](globimap_t &self, py::array_t<uint8_t> buf) -> void {
+             self.from_buffer(buf.data(), buf.size(), buf.size() * 8);
+           });
 }

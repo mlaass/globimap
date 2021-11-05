@@ -143,16 +143,19 @@ inline void hash(uint32_t *data, size_t len, uint32_t *v1, uint32_t *v2) {
 }
 #endif
 
-template <typename element_type = bool> class GloBiMap {
+
+
+template <typename T = uint8_t> class GloBiMap {
 public:
   uint64_t maxhash = 0; ///< was used for debugging that the hash numbers
                         ///< actually are large enough
   typedef std::set<std::pair<uint32_t, uint32_t>>
       error_container_t; // could be unordered_set dep. on your situation.
 private:
-  std::vector<element_type> filter;
-  int d;
+  std::vector<T> filter;
+  uint64_t num_hash;
   uint64_t mask;
+
 
 protected:
   std::vector<double> storage;
@@ -177,7 +180,7 @@ public:
     uint64_t h1 = 8589845122, h2 = 8465418721;
     double maxp = 0;
     hash(&a[0], 2, &h1, &h2);
-    for (size_t i = 0; i < static_cast<size_t>(d); i++) {
+    for (size_t i = 0; i < static_cast<size_t>(num_hash); i++) {
       uint64_t k = (h1 + (i + 1) * h2) & mask;
 
 #ifdef GLOBIMAP_COMPUTE_MAXHASH
@@ -199,22 +202,83 @@ public:
     std::cout << std::endl;
 #endif
   }
+
+  void put_v(std::vector<uint64_t> a) {
+    //    std::cout << "put" << a[0] << ";" << a[1] <<";";
+
+    // get the two hashs:
+    uint64_t h1 = 8589845122, h2 = 8465418721;
+    double maxp = 0;
+    hash(&a[0], 2, &h1, &h2);
+    for (size_t i = 0; i < static_cast<size_t>(num_hash); i++) {
+      uint64_t k = (h1 + (i + 1) * h2) & mask;
+
+#ifdef GLOBIMAP_COMPUTE_MAXHASH
+      if (k > maxhash)
+        maxhash = k;
+#endif
+//       std::cout << "put: k=" << k << std::endl;
+#ifdef DEBUG_HASH_PUT
+      if (static_cast<long double>(k) / mask > maxp)
+        maxp = static_cast<long double>(k) / mask;
+#pragma omp critical
+      std::cout << k << "(;" << static_cast<long double>(k) / mask << ") => "
+                << maxp << std::endl;
+#endif
+#pragma omp critical
+      filter[k] += 1;
+    }
+#ifdef DEBUG_HASH_PUT
+    std::cout << std::endl;
+#endif
+  }
+
+
   bool get(std::vector<uint64_t> a) {
     //    std::cout << "GET for " << a[0] << "/" << a[1] << std::endl;
     uint64_t h1 = 8589845122, h2 = 8465418721;
     hash(&a[0], 2, &h1, &h2);
-    for (size_t i = 0; i < static_cast<size_t>(d); i++) {
+    for (size_t i = 0; i < static_cast<size_t>(num_hash); i++) {
       uint64_t k = (h1 + (i + 1) * h2) & mask;
       if (filter[k] == 0)
-        return false;
+        return 0;
     }
     return true;
   }
+  T get_v(std::vector<uint64_t> a) {
+    //    std::cout << "GET for " << a[0] << "/" << a[1] << std::endl;
 
-  void configure(size_t _d, size_t logm) {
-    d = _d;
-    mask = (static_cast<uint64_t>(1) << logm) - 1;
-    std::cout << "logm = " << logm << " mask = " << mask << std::hex << "0x" << mask
+    std::unordered_map<T, uint8_t> bins;
+    T max_v = 0;
+    auto max_it = bins.end();
+    uint64_t h1 = 8589845122, h2 = 8465418721;
+    hash(&a[0], 2, &h1, &h2);
+    for (size_t i = 0; i < static_cast<size_t>(num_hash); i++) {
+      uint64_t k = (h1 + (i + 1) * h2) & mask;
+      auto v = filter[k];
+
+      if (v == 0){
+        return v;
+      }
+
+      auto bin = bins.find(v);
+      if(bin != bins.end()){
+        bin->second++;
+      }else{
+        bin = bins.insert({v, 1}).first;
+      }
+      if (bin->second > max_v){
+        max_v = bin->second;
+        max_it = bin;
+      }
+    }
+    return max_it->first;
+  }
+
+  void configure(size_t hash_count, size_t log_size) {
+    num_hash = hash_count;
+    mask = (static_cast<uint64_t>(1) << log_size) - 1;
+    std::cout << "log_size = " << log_size << " mask = " << mask << std::hex << "0x" << mask
               << std::dec << std::endl;
     filter.resize(mask + 1);
     std::cout << "filter.size = " << filter.size() << std::endl;
@@ -222,8 +286,10 @@ public:
 
   std::string summary() {
     size_t ones = 0;
+    uint64_t sum = 0;
 #pragma omp parallel for
     for (size_t i = 0; i < filter.size(); i++) {
+      sum += filter[i];
       if (filter[i] == 1)
 #pragma omp atomic
         ones++;
@@ -236,9 +302,14 @@ public:
     ss << "\"maxhash\":" << maxhash << "," << std::endl;
 #endif
     ss << "\"storage:\": "
-       << static_cast<double>(filter.size()) / 8 / 1024 / 1024 << ","
-       << std::endl;
+       << static_cast<uint64_t>(filter.size()) / 8  << ","<< std::endl;
+    ss << "\"storage_kb:\": "
+       << static_cast<uint64_t>(filter.size()) / 8 / 1024  << ","<< std::endl;
+    ss << "\"storage_mb:\": "
+       << static_cast<uint64_t>(filter.size()) / 8 / 1024 / 1024 << "," << std::endl;
     ss << "\"ones:\": " << ones << "," << std::endl;
+    ss << "\"sum:\": " << sum << "," << std::endl;
+    ss << "\"mean:\": " << (static_cast<double>(sum)/filter.size()) << "," << std::endl;
     ss << "\"foz:\": "
        << static_cast<double>((filter.size() - ones)) / (double)filter.size()
        << "," << std::endl;
