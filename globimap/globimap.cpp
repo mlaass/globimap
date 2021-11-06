@@ -13,10 +13,10 @@ namespace py = pybind11;
 #include "globimap.hpp"
 
 // Wrap 2D C++ array (given as pointer) to a numpy object.
-static py::array_t<double> wrap2D(double *data, size_t h, size_t w) {
+static py::array_t<double> wrap2D(double *data, size_t w, size_t h) {
 
-  auto shape = {h, w};
-  auto strides = std::vector<size_t>({w * 8, 8});
+  auto shape = { h,w};
+  auto strides = std::vector<size_t>({8*w,  8});
   auto caps = py::capsule(
       data, [](void *v) { /*delete reinterpret_cast<double *>(v);*/ });
 
@@ -77,6 +77,21 @@ PYBIND11_MODULE(globimap, m) {
              auto &data = self.rasterize(x, y, s0, s1);
              return wrap2D(&data[0], s0, s1);
            })
+      .def("rasterize_v_mean",
+           +[](globimap_t &self, size_t x, size_t y, size_t s0, size_t s1) {
+             auto &data = self.rasterize_v_mean(x, y, s0, s1);
+             return wrap2D(&data[0], s0, s1);
+           })
+      .def("rasterize_v_mean_tanh",
+           +[](globimap_t &self, size_t x, size_t y, size_t s0, size_t s1) {
+             auto &data = self.rasterize_v_mean_tanh(x, y, s0, s1);
+             return wrap2D(&data[0], s0, s1);
+           })
+      .def("rasterize_v_bins",
+           +[](globimap_t &self, size_t x, size_t y, size_t s0, size_t s1) {
+             auto &data = self.rasterize_v_bins(x, y, s0, s1);
+             return wrap2D(&data[0], s0, s1);
+           })
       .def("correct",
            +[](globimap_t &self, size_t x, size_t y, size_t s0,
                size_t s1) -> py::array {
@@ -93,11 +108,19 @@ PYBIND11_MODULE(globimap, m) {
            })
       .def("get",
            +[](globimap_t &self, uint32_t x, uint32_t y) -> bool {
-             return self.get_v({x, y});
-           })
-      .def("get_v",
-           +[](globimap_t &self, uint32_t x, uint32_t y) -> uint8_t {
              return self.get({x, y});
+           })
+      .def("get_v_mean",
+           +[](globimap_t &self, uint32_t x, uint32_t y) -> uint8_t {
+             return self.get_v_mean({x, y});
+           })
+      .def("get_v_mean_tanh",
+           +[](globimap_t &self, uint32_t x, uint32_t y) -> uint8_t {
+             return self.get_v_mean({x, y});
+           })
+      .def("get_v_bins",
+           +[](globimap_t &self, uint32_t x, uint32_t y) -> uint8_t {
+             return self.get_v_bins({x, y});
            })
       .def("configure",
            +[](globimap_t &self, size_t k, size_t m) { self.configure(k, m); })
