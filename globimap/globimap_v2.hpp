@@ -37,7 +37,6 @@ template <typename BITS1 = bool, typename BITS8 = uint8_t,
 struct Layer {
   uint bits;
   uint64_t mask;
-
   std::vector<BITS1> f1;
   std::vector<BITS8> f8;
   std::vector<BITS16> f16;

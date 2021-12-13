@@ -143,21 +143,24 @@ inline void hash(uint32_t *data, size_t len, uint32_t *v1, uint32_t *v2) {
 }
 #endif
 
-template <typename T = uint8_t> class GloBiMap {
+template <typename T = uint8_t, typename OT = uint32_t> class GloBiMap {
 public:
+  static const uint THRESHOLD = 250;
   uint64_t maxhash = 0; ///< was used for debugging that the hash numbers
                         ///< actually are large enough
   typedef std::set<std::pair<uint32_t, uint32_t>>
       error_container_t; // could be unordered_set dep. on your situation.
 private:
+  std::vector<OT> overflow;
   std::vector<T> filter;
   uint64_t num_hash;
   uint64_t mask;
+  uint64_t mask_overflow;
 
   T tanh_lookup[256];
 
 protected:
-  std::vector<double> storage;
+  std::vector<uint32_t> storage;
   error_container_t errors;
 
 public:
@@ -169,6 +172,7 @@ public:
   }
   void clear() {
     filter.clear();
+    overflow.clear();
     errors.clear();
   }
 
@@ -231,7 +235,12 @@ public:
                 << maxp << std::endl;
 #endif
 #pragma omp critical
-      filter[k] += 1;
+      if (filter[k] == THRESHOLD) {
+        uint64_t k2 = (h1 + (i + 1) * h2) & mask_overflow;
+        overflow[k2] += 1;
+      } else {
+        filter[k] += 1;
+      }
     }
 #ifdef DEBUG_HASH_PUT
     std::cout << std::endl;
@@ -249,7 +258,7 @@ public:
     }
     return true;
   }
-  T get_v_mean(std::vector<uint64_t> a) {
+  uint64_t get_v_mean(std::vector<uint64_t> a) {
     //    std::cout << "GET for " << a[0] << "/" << a[1] << std::endl;
 
     uint64_t sum = 0;
@@ -258,24 +267,29 @@ public:
     hash(&a[0], 2, &h1, &h2);
     for (size_t i = 0; i < static_cast<size_t>(num_hash); i++) {
       uint64_t k = (h1 + (i + 1) * h2) & mask;
-      auto v = filter[k];
+      uint64_t v = static_cast<uint64_t>(filter[k]);
       if (v == 0) {
         return v;
       }
+      if (v == THRESHOLD) {
+        uint64_t k2 = (h1 + (i + 1) * h2) & mask_overflow;
+        v = THRESHOLD + static_cast<uint64_t>(overflow[k2]);
+      }
+
       sum += v;
     }
-    return static_cast<T>(sum / num_hash);
+    return sum / num_hash;
   }
 
-  T get_v_mean_tanh(std::vector<uint64_t> a) {
+  uint64_t get_v_mean_tanh(std::vector<uint64_t> a) {
     return tanh_lookup[get_v_mean(a)];
   }
 
-  T get_v_bins(std::vector<uint64_t> a) {
+  uint64_t get_v_bins(std::vector<uint64_t> a) {
     //    std::cout << "GET for " << a[0] << "/" << a[1] << std::endl;
 
-    std::unordered_map<T, uint8_t> bins;
-    T max_v = 0;
+    std::unordered_map<uint64_t, uint8_t> bins;
+    uint64_t max_v = 0;
     auto max_it = bins.end();
 
     uint64_t h1 = 8589845122, h2 = 8465418721;
@@ -283,7 +297,10 @@ public:
     for (size_t i = 0; i < static_cast<size_t>(num_hash); i++) {
       uint64_t k = (h1 + (i + 1) * h2) & mask;
       auto v = filter[k];
-
+      if (v == THRESHOLD) {
+        uint64_t k2 = (h1 + (i + 1) * h2) & mask_overflow;
+        v = THRESHOLD + static_cast<uint64_t>(overflow[k2]);
+      }
       if (v == 0) {
         return v;
       }
@@ -301,13 +318,16 @@ public:
     return max_it->first;
   }
 
-  void configure(size_t hash_count, size_t log_size) {
+  void configure(size_t hash_count, size_t log_size, size_t overflow_log_size) {
     num_hash = hash_count;
     mask = (static_cast<uint64_t>(1) << log_size) - 1;
+    mask_overflow = (static_cast<uint64_t>(1) << overflow_log_size) - 1;
     std::cout << "log_size = " << log_size << " mask = " << mask << std::hex
               << "0x" << mask << std::dec << std::endl;
     filter.resize(mask + 1);
+    overflow.resize(mask_overflow + 1);
     std::cout << "filter.size = " << filter.size() << std::endl;
+    std::cout << "overflow.size = " << overflow.size() << std::endl;
   }
 
   std::string summary() {
@@ -334,22 +354,15 @@ public:
 #ifdef GLOBIMAP_COMPUTE_MAXHASH
     ss << "\"maxhash\":" << maxhash << "," << std::endl;
 #endif
-    ss << "\"filtersize:\": " << static_cast<uint64_t>(filter.size()) << ","
+    ss << "\"filtersize\": " << static_cast<uint64_t>(filter.size()) << ","
        << std::endl;
-    ss << "\"storage:\": " << static_cast<uint64_t>(filter.size()) / 8 << ","
+    ss << "\"ones\": " << ones << "," << std::endl;
+    ss << "\"zeros\": " << zeros << "," << std::endl;
+    ss << "\"sum\": " << sum << "," << std::endl;
+    ss << "\"max\": " << max << "," << std::endl;
+    ss << "\"mean\": " << (static_cast<double>(sum) / filter.size()) << ","
        << std::endl;
-    ss << "\"storage_kb:\": " << static_cast<uint64_t>(filter.size()) / 8 / 1024
-       << "," << std::endl;
-    ss << "\"storage_mb:\": "
-       << static_cast<double>(filter.size()) / 8 / 1024 / 1024 << ","
-       << std::endl;
-    ss << "\"ones:\": " << ones << "," << std::endl;
-    ss << "\"zeros:\": " << zeros << "," << std::endl;
-    ss << "\"sum:\": " << sum << "," << std::endl;
-    ss << "\"max:\": " << max << "," << std::endl;
-    ss << "\"mean:\": " << (static_cast<double>(sum) / filter.size()) << ","
-       << std::endl;
-    ss << "\"foz:\": "
+    ss << "\"foz\": "
        << static_cast<double>((filter.size() - ones)) / (double)filter.size()
        << "," << std::endl;
     ss << "\"eci\": " << errors.size() << std::endl;
@@ -357,8 +370,8 @@ public:
     return ss.str();
   }
 
-  std::vector<double> &rasterize(uint64_t x, uint64_t y, uint32_t s0,
-                                 uint32_t s1) {
+  std::vector<uint32_t> &rasterize(uint64_t x, uint64_t y, uint32_t s0,
+                                   uint32_t s1) {
     storage.resize(s0 * s1);
 #pragma omp parallel for
     for (uint32_t j = 0; j < s1; j++) {
@@ -369,44 +382,20 @@ public:
     return storage;
   }
 
-  std::vector<double> &rasterize_v_mean(uint64_t x, uint64_t y, uint32_t s0,
-                                        uint32_t s1) {
+  std::vector<uint32_t> &rasterize_v_mean(uint64_t x, uint64_t y, uint32_t s0,
+                                          uint32_t s1) {
     storage.resize(s0 * s1);
 #pragma omp parallel for
     for (uint32_t j = 0; j < s1; j++) {
       for (uint32_t i = 0; i < s0; i++) {
-        storage[(s1-(j+1)) * s0 + i] = get_v_mean({x + i, y + j});
+        storage[(s1 - (j + 1)) * s0 + i] = get_v_mean({x + i, y + j});
       }
     }
     return storage;
   }
 
-  std::vector<double> &rasterize_v_mean_tanh(uint64_t x, uint64_t y,
-                                             uint32_t s0, uint32_t s1) {
-    storage.resize(s0 * s1);
-#pragma omp parallel for
-    for (uint32_t j = 0; j < s1; j++) {
-      for (uint32_t i = 0; i < s0; i++) {
-         storage[(s1-(j+1)) * s0 + i] = get_v_mean_tanh({x + i, y + j});
-      }
-    }
-    return storage;
-  }
-
-  std::vector<double> &rasterize_v_bins(uint64_t x, uint64_t y, uint32_t s0,
-                                        uint32_t s1) {
-    storage.resize(s0 * s1);
-#pragma omp parallel for
-    for (uint32_t j = 0; j < s1; j++) {
-      for (uint32_t i = 0; i < s0; i++) {
-        storage[(s1-(j+1)) * s0 + i]= get_v_bins({x + i, y + j});
-      }
-    }
-    return storage;
-  }
-
-  std::vector<double> &apply_correction(uint32_t x, uint32_t y, uint32_t s0,
-                                        uint32_t s1) {
+  std::vector<uint32_t> &apply_correction(uint32_t x, uint32_t y, uint32_t s0,
+                                          uint32_t s1) {
     // apply corrections over storage
     if (storage.size() != s0 * s1)
       throw(std::runtime_error("corrections can only be applied after "
