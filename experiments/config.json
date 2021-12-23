@@ -1,0 +1,368 @@
+{ "config":[
+[
+{"bits": 1, "logsize": 16}],
+[
+{"bits": 1, "logsize": 16},
+{"bits": 8, "logsize": 24}],
+[
+{"bits": 1, "logsize": 16},
+{"bits": 8, "logsize": 24},
+{"bits": 16, "logsize": 32}],
+[
+{"bits": 1, "logsize": 16},
+{"bits": 8, "logsize": 24},
+{"bits": 32, "logsize": 32}],
+[
+{"bits": 1, "logsize": 16},
+{"bits": 8, "logsize": 24},
+{"bits": 64, "logsize": 32}],
+[
+{"bits": 1, "logsize": 16},
+{"bits": 16, "logsize": 24}],
+[
+{"bits": 1, "logsize": 16},
+{"bits": 16, "logsize": 24},
+{"bits": 32, "logsize": 32}],
+[
+{"bits": 1, "logsize": 16},
+{"bits": 16, "logsize": 24},
+{"bits": 64, "logsize": 32}],
+[
+{"bits": 1, "logsize": 16},
+{"bits": 32, "logsize": 24}],
+[
+{"bits": 1, "logsize": 16},
+{"bits": 32, "logsize": 24},
+{"bits": 64, "logsize": 32}],
+[
+{"bits": 1, "logsize": 16},
+{"bits": 64, "logsize": 24}],
+[
+{"bits": 8, "logsize": 16}],
+[
+{"bits": 8, "logsize": 16},
+{"bits": 16, "logsize": 24}],
+[
+{"bits": 8, "logsize": 16},
+{"bits": 16, "logsize": 24},
+{"bits": 32, "logsize": 32}],
+[
+{"bits": 8, "logsize": 16},
+{"bits": 16, "logsize": 24},
+{"bits": 64, "logsize": 32}],
+[
+{"bits": 8, "logsize": 16},
+{"bits": 32, "logsize": 24}],
+[
+{"bits": 8, "logsize": 16},
+{"bits": 32, "logsize": 24},
+{"bits": 64, "logsize": 32}],
+[
+{"bits": 8, "logsize": 16},
+{"bits": 64, "logsize": 24}],
+[
+{"bits": 1, "logsize": 16}],
+[
+{"bits": 1, "logsize": 16},
+{"bits": 8, "logsize": 32}],
+[
+{"bits": 1, "logsize": 16},
+{"bits": 8, "logsize": 32},
+{"bits": 16, "logsize": 24}],
+[
+{"bits": 1, "logsize": 16},
+{"bits": 8, "logsize": 32},
+{"bits": 32, "logsize": 24}],
+[
+{"bits": 1, "logsize": 16},
+{"bits": 8, "logsize": 32},
+{"bits": 64, "logsize": 24}],
+[
+{"bits": 1, "logsize": 16},
+{"bits": 16, "logsize": 32}],
+[
+{"bits": 1, "logsize": 16},
+{"bits": 16, "logsize": 32},
+{"bits": 32, "logsize": 24}],
+[
+{"bits": 1, "logsize": 16},
+{"bits": 16, "logsize": 32},
+{"bits": 64, "logsize": 24}],
+[
+{"bits": 1, "logsize": 16},
+{"bits": 32, "logsize": 32}],
+[
+{"bits": 1, "logsize": 16},
+{"bits": 32, "logsize": 32},
+{"bits": 64, "logsize": 24}],
+[
+{"bits": 1, "logsize": 16},
+{"bits": 64, "logsize": 32}],
+[
+{"bits": 8, "logsize": 16}],
+[
+{"bits": 8, "logsize": 16},
+{"bits": 16, "logsize": 32}],
+[
+{"bits": 8, "logsize": 16},
+{"bits": 16, "logsize": 32},
+{"bits": 32, "logsize": 24}],
+[
+{"bits": 8, "logsize": 16},
+{"bits": 16, "logsize": 32},
+{"bits": 64, "logsize": 24}],
+[
+{"bits": 8, "logsize": 16},
+{"bits": 32, "logsize": 32}],
+[
+{"bits": 8, "logsize": 16},
+{"bits": 32, "logsize": 32},
+{"bits": 64, "logsize": 24}],
+[
+{"bits": 8, "logsize": 16},
+{"bits": 64, "logsize": 32}],
+[
+{"bits": 1, "logsize": 24}],
+[
+{"bits": 1, "logsize": 24},
+{"bits": 8, "logsize": 16}],
+[
+{"bits": 1, "logsize": 24},
+{"bits": 8, "logsize": 16},
+{"bits": 16, "logsize": 32}],
+[
+{"bits": 1, "logsize": 24},
+{"bits": 8, "logsize": 16},
+{"bits": 32, "logsize": 32}],
+[
+{"bits": 1, "logsize": 24},
+{"bits": 8, "logsize": 16},
+{"bits": 64, "logsize": 32}],
+[
+{"bits": 1, "logsize": 24},
+{"bits": 16, "logsize": 16}],
+[
+{"bits": 1, "logsize": 24},
+{"bits": 16, "logsize": 16},
+{"bits": 32, "logsize": 32}],
+[
+{"bits": 1, "logsize": 24},
+{"bits": 16, "logsize": 16},
+{"bits": 64, "logsize": 32}],
+[
+{"bits": 1, "logsize": 24},
+{"bits": 32, "logsize": 16}],
+[
+{"bits": 1, "logsize": 24},
+{"bits": 32, "logsize": 16},
+{"bits": 64, "logsize": 32}],
+[
+{"bits": 1, "logsize": 24},
+{"bits": 64, "logsize": 16}],
+[
+{"bits": 8, "logsize": 24}],
+[
+{"bits": 8, "logsize": 24},
+{"bits": 16, "logsize": 16}],
+[
+{"bits": 8, "logsize": 24},
+{"bits": 16, "logsize": 16},
+{"bits": 32, "logsize": 32}],
+[
+{"bits": 8, "logsize": 24},
+{"bits": 16, "logsize": 16},
+{"bits": 64, "logsize": 32}],
+[
+{"bits": 8, "logsize": 24},
+{"bits": 32, "logsize": 16}],
+[
+{"bits": 8, "logsize": 24},
+{"bits": 32, "logsize": 16},
+{"bits": 64, "logsize": 32}],
+[
+{"bits": 8, "logsize": 24},
+{"bits": 64, "logsize": 16}],
+[
+{"bits": 1, "logsize": 24}],
+[
+{"bits": 1, "logsize": 24},
+{"bits": 8, "logsize": 32}],
+[
+{"bits": 1, "logsize": 24},
+{"bits": 8, "logsize": 32},
+{"bits": 16, "logsize": 16}],
+[
+{"bits": 1, "logsize": 24},
+{"bits": 8, "logsize": 32},
+{"bits": 32, "logsize": 16}],
+[
+{"bits": 1, "logsize": 24},
+{"bits": 8, "logsize": 32},
+{"bits": 64, "logsize": 16}],
+[
+{"bits": 1, "logsize": 24},
+{"bits": 16, "logsize": 32}],
+[
+{"bits": 1, "logsize": 24},
+{"bits": 16, "logsize": 32},
+{"bits": 32, "logsize": 16}],
+[
+{"bits": 1, "logsize": 24},
+{"bits": 16, "logsize": 32},
+{"bits": 64, "logsize": 16}],
+[
+{"bits": 1, "logsize": 24},
+{"bits": 32, "logsize": 32}],
+[
+{"bits": 1, "logsize": 24},
+{"bits": 32, "logsize": 32},
+{"bits": 64, "logsize": 16}],
+[
+{"bits": 1, "logsize": 24},
+{"bits": 64, "logsize": 32}],
+[
+{"bits": 8, "logsize": 24}],
+[
+{"bits": 8, "logsize": 24},
+{"bits": 16, "logsize": 32}],
+[
+{"bits": 8, "logsize": 24},
+{"bits": 16, "logsize": 32},
+{"bits": 32, "logsize": 16}],
+[
+{"bits": 8, "logsize": 24},
+{"bits": 16, "logsize": 32},
+{"bits": 64, "logsize": 16}],
+[
+{"bits": 8, "logsize": 24},
+{"bits": 32, "logsize": 32}],
+[
+{"bits": 8, "logsize": 24},
+{"bits": 32, "logsize": 32},
+{"bits": 64, "logsize": 16}],
+[
+{"bits": 8, "logsize": 24},
+{"bits": 64, "logsize": 32}],
+[
+{"bits": 1, "logsize": 32}],
+[
+{"bits": 1, "logsize": 32},
+{"bits": 8, "logsize": 16}],
+[
+{"bits": 1, "logsize": 32},
+{"bits": 8, "logsize": 16},
+{"bits": 16, "logsize": 24}],
+[
+{"bits": 1, "logsize": 32},
+{"bits": 8, "logsize": 16},
+{"bits": 32, "logsize": 24}],
+[
+{"bits": 1, "logsize": 32},
+{"bits": 8, "logsize": 16},
+{"bits": 64, "logsize": 24}],
+[
+{"bits": 1, "logsize": 32},
+{"bits": 16, "logsize": 16}],
+[
+{"bits": 1, "logsize": 32},
+{"bits": 16, "logsize": 16},
+{"bits": 32, "logsize": 24}],
+[
+{"bits": 1, "logsize": 32},
+{"bits": 16, "logsize": 16},
+{"bits": 64, "logsize": 24}],
+[
+{"bits": 1, "logsize": 32},
+{"bits": 32, "logsize": 16}],
+[
+{"bits": 1, "logsize": 32},
+{"bits": 32, "logsize": 16},
+{"bits": 64, "logsize": 24}],
+[
+{"bits": 1, "logsize": 32},
+{"bits": 64, "logsize": 16}],
+[
+{"bits": 8, "logsize": 32}],
+[
+{"bits": 8, "logsize": 32},
+{"bits": 16, "logsize": 16}],
+[
+{"bits": 8, "logsize": 32},
+{"bits": 16, "logsize": 16},
+{"bits": 32, "logsize": 24}],
+[
+{"bits": 8, "logsize": 32},
+{"bits": 16, "logsize": 16},
+{"bits": 64, "logsize": 24}],
+[
+{"bits": 8, "logsize": 32},
+{"bits": 32, "logsize": 16}],
+[
+{"bits": 8, "logsize": 32},
+{"bits": 32, "logsize": 16},
+{"bits": 64, "logsize": 24}],
+[
+{"bits": 8, "logsize": 32},
+{"bits": 64, "logsize": 16}],
+[
+{"bits": 1, "logsize": 32}],
+[
+{"bits": 1, "logsize": 32},
+{"bits": 8, "logsize": 24}],
+[
+{"bits": 1, "logsize": 32},
+{"bits": 8, "logsize": 24},
+{"bits": 16, "logsize": 16}],
+[
+{"bits": 1, "logsize": 32},
+{"bits": 8, "logsize": 24},
+{"bits": 32, "logsize": 16}],
+[
+{"bits": 1, "logsize": 32},
+{"bits": 8, "logsize": 24},
+{"bits": 64, "logsize": 16}],
+[
+{"bits": 1, "logsize": 32},
+{"bits": 16, "logsize": 24}],
+[
+{"bits": 1, "logsize": 32},
+{"bits": 16, "logsize": 24},
+{"bits": 32, "logsize": 16}],
+[
+{"bits": 1, "logsize": 32},
+{"bits": 16, "logsize": 24},
+{"bits": 64, "logsize": 16}],
+[
+{"bits": 1, "logsize": 32},
+{"bits": 32, "logsize": 24}],
+[
+{"bits": 1, "logsize": 32},
+{"bits": 32, "logsize": 24},
+{"bits": 64, "logsize": 16}],
+[
+{"bits": 1, "logsize": 32},
+{"bits": 64, "logsize": 24}],
+[
+{"bits": 8, "logsize": 32}],
+[
+{"bits": 8, "logsize": 32},
+{"bits": 16, "logsize": 24}],
+[
+{"bits": 8, "logsize": 32},
+{"bits": 16, "logsize": 24},
+{"bits": 32, "logsize": 16}],
+[
+{"bits": 8, "logsize": 32},
+{"bits": 16, "logsize": 24},
+{"bits": 64, "logsize": 16}],
+[
+{"bits": 8, "logsize": 32},
+{"bits": 32, "logsize": 24}],
+[
+{"bits": 8, "logsize": 32},
+{"bits": 32, "logsize": 24},
+{"bits": 64, "logsize": 16}],
+[
+{"bits": 8, "logsize": 32},
+{"bits": 64, "logsize": 24}]
+]}

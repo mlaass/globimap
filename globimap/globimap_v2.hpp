@@ -3,6 +3,7 @@
 #include "hashfn.hpp"
 #include <algorithm>
 #include <cassert>
+#include <climits>
 #include <cstdint>
 #include <iterator>
 #include <limits>
@@ -13,10 +14,10 @@
 #include <vector>
 
 #define THRESHOLD_1BIT 1
-#define THRESHOLD_8BIT 250
-#define THRESHOLD_16BIT 65530
-#define THRESHOLD_32BIT 4294967290
-#define THRESHOLD_64BIT 0xfffffffffffffffc
+#define THRESHOLD_8BIT 0xff
+#define THRESHOLD_16BIT 0xffff
+#define THRESHOLD_32BIT 0xffffffff
+#define THRESHOLD_64BIT 0xffffffffffffffff
 
 // #define MAKE_PARALLEL 1
 
@@ -44,8 +45,9 @@ template <typename BITS1 = bool, typename BITS8 = uint8_t,
           typename BITS16 = uint16_t, typename BITS32 = uint32_t,
           typename BITS64 = uint64_t>
 struct Layer {
+
   uint bits;
-  uint size;
+  uint64_t size;
   uint64_t mask;
   std::vector<BITS1> f1;
   std::vector<BITS8> f8;
@@ -159,6 +161,7 @@ struct Layer {
       break;
     default:
       assert(false); // bits needs to be 1,8,16,32 or 64
+      return false;
     }
   }
   uint64_t byte_size() {
@@ -180,6 +183,7 @@ struct Layer {
       break;
     default:
       assert(false); // bits needs to be 1,8,16,32 or 64
+      return 0;
     }
   }
   std::vector<uint8_t> as_bytes() {
@@ -227,98 +231,68 @@ struct Layer {
     }
     return buf;
   }
+  struct Stats {
+    uint64_t zeros, min, max, sum;
+  };
 
-  uint64_t zeros() {
-    uint64_t z = 0;
-
-    switch (bits) {
-    case 1:
-      PARA_FOR
-      for (size_t i = 0; i < f1.size(); i++) {
-        if (f1[i] == 0) {
-          PARA_ATOMIC
-          z++;
-        }
-      }
-      break;
-    case 8:
-      PARA_FOR
-      for (size_t i = 0; i < f8.size(); i++) {
-        if (f8[i] == 0) {
-          PARA_ATOMIC
-          z++;
-        }
-      }
-      break;
-    case 16:
-      PARA_FOR
-      for (size_t i = 0; i < f16.size(); i++) {
-        if (f16[i] == 0) {
-          PARA_ATOMIC
-          z++;
-        }
-      }
-      break;
-    case 32:
-      PARA_FOR
-      for (size_t i = 0; i < f32.size(); i++) {
-        if (f32[i] == 0) {
-          PARA_ATOMIC
-          z++;
-        }
-      }
-      break;
-    case 64:
-      PARA_FOR
-      for (size_t i = 0; i < f64.size(); i++) {
-        if (f64[i] == 0) {
-          PARA_ATOMIC
-          z++;
-        }
-      }
-      break;
-    default:
-      assert(false); // bits needs to be 1,8,16,32 or 64
-    }
-    return z;
-  }
-  uint64_t sum() {
-    uint64_t s = 0;
+  Stats stats() {
+    Stats s = {0};
+    s.min = ULLONG_MAX;
 
     switch (bits) {
     case 1: {
       PARA_FOR
       for (size_t i = 0; i < f1.size(); i++) {
         PARA_ATOMIC
-        s += f1[i];
+        s.sum += f1[i];
+        s.min = std::min(s.min, (uint64_t)f1[i]);
+        s.max = std::max(s.max, (uint64_t)f1[i]);
+        if (f1[i] == 0)
+          s.zeros++;
       }
     } break;
     case 8: {
       PARA_FOR
       for (size_t i = 0; i < f8.size(); i++) {
         PARA_ATOMIC
-        s += f8[i];
+        s.sum += f8[i];
+        s.min = std::min(s.min, (uint64_t)f8[i]);
+        s.max = std::max(s.max, (uint64_t)f8[i]);
+        if (f8[i] == 0)
+          s.zeros++;
       }
     } break;
     case 16: {
       PARA_FOR
       for (size_t i = 0; i < f16.size(); i++) {
         PARA_ATOMIC
-        s += f16[i];
+        s.sum += f16[i];
+        s.min = std::min(s.min, (uint64_t)f16[i]);
+        s.max = std::max(s.max, (uint64_t)f16[i]);
+        if (f16[i] == 0)
+          s.zeros++;
       }
     } break;
     case 32: {
       PARA_FOR
       for (size_t i = 0; i < f32.size(); i++) {
         PARA_ATOMIC
-        s += f32[i];
+        s.sum += f32[i];
+        s.min = std::min(s.min, (uint64_t)f32[i]);
+        s.max = std::max(s.max, (uint64_t)f32[i]);
+        if (f32[i] == 0)
+          s.zeros++;
       }
     } break;
     case 64: {
       PARA_FOR
       for (size_t i = 0; i < f64.size(); i++) {
         PARA_ATOMIC
-        s += f64[i];
+        s.sum += f64[i];
+        s.min = std::min(s.min, (uint64_t)f64[i]);
+        s.max = std::max(s.max, (uint64_t)f64[i]);
+        if (f64[i] == 0)
+          s.zeros++;
       }
     } break;
     default:
@@ -329,18 +303,19 @@ struct Layer {
 
   std::string summary() {
 
-    auto z = zeros();
-    auto s = sum();
+    auto s = stats();
 
     std::stringstream ss;
     ss << "{" << std::endl;
     ss << "\"bits:\": " << bits << "," << std::endl;
     ss << "\"size:\": " << size << "," << std::endl;
     ss << "\"byte_size:\": " << byte_size() << "," << std::endl;
-    ss << "\"zeros:\": " << z << "," << std::endl;
-    ss << "\"foz:\": " << (double)(z) / (double)size << "," << std::endl;
-    ss << "\"sum:\": " << s << "," << std::endl;
-    ss << "\"mean:\": " << (double)(s) / (double)size << "," << std::endl;
+    ss << "\"foz:\": " << (double)(s.zeros) / (double)size << "," << std::endl;
+    ss << "\"zeros:\": " << s.zeros << "," << std::endl;
+    ss << "\"sum:\": " << s.sum << "," << std::endl;
+    ss << "\"min:\": " << s.min << "," << std::endl;
+    ss << "\"max:\": " << s.max << "," << std::endl;
+    ss << "\"mean:\": " << (double)s.sum / (double)size << std::endl;
     // ss << "\"eci\": " << errors.size() << std::endl;
     ss << "}";
     return ss.str();
@@ -357,6 +332,25 @@ struct LayerConfig {
   uint bits;
   uint logsize;
 };
+
+struct FilterConfig {
+  uint hash_k;
+  std::vector<LayerConfig> layers;
+  std::string to_string() {
+    std::stringstream ss;
+    ss << "k_" << hash_k;
+    ss << "bits_";
+    for (auto l1 : layers) {
+      ss << l1.bits << ".";
+    }
+    ss << "logsize_";
+    for (auto l2 : layers) {
+      ss << l2.logsize << ".";
+    }
+    return ss.str();
+  }
+};
+
 template <typename BITS1 = bool, typename BITS8 = uint8_t,
           typename BITS16 = uint16_t, typename BITS32 = uint32_t,
           typename BITS64 = uint64_t>
@@ -370,19 +364,18 @@ struct Globimap {
   double error_rate;
   bool collect_input;
 
-  Globimap(uint hashcount_conf, std::vector<uint> bit_conf,
-           std::vector<uint> logsize_conf, bool collect = false)
+  Globimap(const FilterConfig &conf, bool collect = false)
       : collect_input(collect) {
-    hashcount = hashcount_conf;
-    assert(bit_conf.size() ==
-           logsize_conf.size()); // config sizes must be equal
-    for (auto i = 0; i < bit_conf.size(); ++i) {
-      assert(bit_conf[i] == 1 || bit_conf[i] == 8 || bit_conf[i] == 16 ||
-             bit_conf[i] == 32 ||
-             bit_conf[i] == 64); // bit_conf needs to be one of 1,8,16,32,64
+    hashcount = conf.hash_k;
+
+    for (auto i = 0; i < conf.layers.size(); ++i) {
+      assert(conf.layers[i].bits == 1 || conf.layers[i].bits == 8 ||
+             conf.layers[i].bits == 16 || conf.layers[i].bits == 32 ||
+             conf.layers[i].bits ==
+                 64); // conf.layers[i].bits needs to be one of 1,8,16,32,64
       Layer l;
-      l.bits = bit_conf[i];
-      l.mask = (static_cast<uint64_t>(1) << logsize_conf[i]) - 1;
+      l.bits = conf.layers[i].bits;
+      l.mask = (static_cast<uint64_t>(1) << conf.layers[i].logsize) - 1;
       l.resize(l.mask + 1);
 
       layers.push_back(l);
@@ -495,15 +488,15 @@ struct Globimap {
   std::string summary() {
     std::stringstream ss;
     ss << "{\n";
-    ss << "\"byte_size\": " << byte_size() << "\n";
-    ss << "\"kb_size\": " << (double)byte_size() / (double)1024 << "\n";
+    ss << "\"byte_size\": " << byte_size() << ",\n";
+    ss << "\"kb_size\": " << (double)byte_size() / (double)1024 << ",\n";
     ss << "\"mb_size\": " << (double)byte_size() / (double)(1024 * 1024)
-       << "\n";
-    ss << "\"collect_input\": " << (collect_input ? "true" : "false") << "\n";
+       << ",\n";
+    ss << "\"collect_input\": " << (collect_input ? "true" : "false") << ",\n";
     if (collect_input) {
-      ss << "\"unique_input\": " << unique_input.size() << "\n";
-      ss << "\"errors\": " << errors.size() << "\n";
-      ss << "\"error_rate\": " << error_rate << "\n";
+      ss << "\"unique_input\": " << unique_input.size() << ",\n";
+      ss << "\"errors\": " << errors.size() << ",\n";
+      ss << "\"error_rate\": " << error_rate << ",\n";
     }
     ss << "\"layers\": [\n";
 

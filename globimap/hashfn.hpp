@@ -30,7 +30,7 @@ inline void hash(const uint64_t *data, const size_t len, uint64_t *v1,
   uint64_t hash[2];
   /*    char buffer[1024];
       snprintf(buffer, 1024,"%s-%lu-%lu", prefix,data[0],data[1]);*/
-  murmur::MurmurHash3_x86_128(data, 16, *v1,
+  murmur::MurmurHash3_x64_128(data, 16, *v1,
                               (void *)hash); // len*sizeof(uint64_t)
   *v1 = hash[0];
   *v2 = hash[1];

@@ -6,7 +6,7 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-set(CMAKE_CXX_FLAGS " -fopenmp -march=native -fPIC")
+set(CMAKE_CXX_FLAGS " -fopenmp -march=native -fPIC -I/usr/include/hdf5/serial")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-Ofast")
 
@@ -22,6 +22,7 @@ set(SOURCES
 # Generate Python module
 add_subdirectory(lib/pybind11)
 pybind11_add_module(globimap ${SOURCES})
+add_subdirectory(lib/HighFive/)
 
 set(SOURCES_TEST
     globimap/globimap_test.cpp
@@ -30,4 +31,10 @@ add_executable(test ${SOURCES_TEST})
 
 target_include_directories(test
     PUBLIC globimap
+    PUBLIC lib/HighFive/include
+    PUBLIC lib/tqdm.cpp/include
+    PUBLIC lib/tqdm-cpp
 )
+
+target_link_libraries(test HighFive)
+
