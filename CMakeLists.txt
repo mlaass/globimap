@@ -15,26 +15,39 @@ set(CMAKE_CXX_FLAGS_RELEASE "-Ofast")
 # Tell CMake that headers are also in SOURCE_DIR
 include_directories(${SOURCE_DIR})
 
-set(SOURCES 
-    globimap/globimap.cpp
+set(PYBIND_SOURCES
+    globimap/globimap_pybind.cpp
 )
 
 # Generate Python module
 add_subdirectory(lib/pybind11)
-pybind11_add_module(globimap ${SOURCES})
+pybind11_add_module(globimap ${PYBIND_SOURCES})
+
+set(HIGHFIVE_USE_BOOST OFF)
+set(HIGHFIVE_EXAMPLES OFF)
+set(HIGHFIVE_BUILD_DOCS OFF)
+set(HIGHFIVE_PARALLEL_HDF5 OFF)
+
 add_subdirectory(lib/HighFive/)
 
-set(SOURCES_TEST
-    globimap/globimap_test.cpp
-)
-add_executable(test ${SOURCES_TEST})
-
-target_include_directories(test
-    PUBLIC globimap
-    PUBLIC lib/HighFive/include
-    PUBLIC lib/tqdm.cpp/include
-    PUBLIC lib/tqdm-cpp
+set(SOURCES_DATASET_TEST
+    globimap/globimap_dataset_test.cpp
 )
 
-target_link_libraries(test HighFive)
+include_directories(
+   lib/HighFive/include
+   lib/tqdm.cpp/include
+   lib/tqdm-cpp
+   lib/boost-headers-only
+   )
+
+set(SOURCES_POLYGON_TEST
+    globimap/globimap_polygon_test.cpp
+)
+
+add_executable(test_datasets ${SOURCES_DATASET_TEST})
+# add_executable(test_polygon ${SOURCES_POLYGON_TEST})
+
+
+target_link_libraries(test_datasets HighFive)
 

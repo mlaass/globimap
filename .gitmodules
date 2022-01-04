@@ -7,3 +7,9 @@
 [submodule "lib/tqdm.cpp"]
 	path = lib/tqdm.cpp
 	url = git@github.com:tqdm/tqdm.cpp.git
+[submodule "lib/boost-headers-only"]
+	path = lib/boost-headers-only
+	url = git@github.com:scipy/boost-headers-only.git
+[submodule "lib/tqdm-cpp"]
+	path = lib/tqdm-cpp
+	url = git@github.com:mraggi/tqdm-cpp.git
