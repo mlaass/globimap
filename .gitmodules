@@ -1,9 +1,6 @@
 [submodule "lib/pybind11"]
 	path = lib/pybind11
 	url = git@github.com:pybind/pybind11.git
-[submodule "HighFive"]
-	path = HighFive
-	url = git@github.com:BlueBrain/HighFive.git
 [submodule "lib/HighFive"]
 	path = lib/HighFive
 	url = git@github.com:BlueBrain/HighFive.git
