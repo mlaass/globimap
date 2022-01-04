@@ -4,3 +4,6 @@
 [submodule "lib/HighFive"]
 	path = lib/HighFive
 	url = git@github.com:BlueBrain/HighFive.git
+[submodule "lib/tqdm.cpp"]
+	path = lib/tqdm.cpp
+	url = git@github.com:tqdm/tqdm.cpp.git
