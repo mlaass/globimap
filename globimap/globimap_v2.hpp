@@ -382,11 +382,11 @@ struct Globimap {
     }
   }
 
-  void put(std::vector<uint64_t> a) {
+  void put(const std::vector<uint64_t> &point) {
     uint64_t h1 = H1, h2 = H2;
     if (collect_input)
-      unique_input.insert({a[0], a[1]});
-    hash(&a[0], 2, &h1, &h2);
+      unique_input.insert({point[0], point[1]});
+    hash(&point[0], 2, &h1, &h2);
     auto all_full = true;
     for (uint64_t i = 0; i < static_cast<uint64_t>(hashcount); i++) {
       for (auto &l : layers) {
@@ -419,9 +419,9 @@ struct Globimap {
     error_rate = (double)errors.size() / (double)(width * height);
   }
 
-  bool get_bool(const std::vector<uint64_t> &a) {
+  bool get_bool(const std::vector<uint64_t> &point) {
     uint64_t h1 = H1, h2 = H2;
-    hash(&a[0], 2, &h1, &h2);
+    hash(&point[0], 2, &h1, &h2);
     auto res = true;
     for (uint64_t i = 0; i < static_cast<uint64_t>(hashcount); i++) {
       uint64_t k = (h1 + (i + 1) * h2) & layers[0].mask;
@@ -431,11 +431,11 @@ struct Globimap {
     return res;
   }
 
-  template <typename RT> RT get_mean(const std::vector<uint64_t> &a) {
+  template <typename RT> RT get_mean(const std::vector<uint64_t> &point) {
     uint64_t sum = 0;
     uint64_t h1 = H1, h2 = H2;
 
-    hash(&a[0], 2, &h1, &h2);
+    hash(&point[0], 2, &h1, &h2);
     for (size_t i = 0; i < static_cast<size_t>(hashcount); i++) {
       for (auto &l : layers) {
         uint64_t k = (h1 + (i + 1) * h2) & l.mask;
@@ -452,12 +452,12 @@ struct Globimap {
     return (RT)sum / (RT)hashcount;
   }
 
-  template <typename RT> RT get_min(const std::vector<uint64_t> &a) {
+  template <typename RT> RT get_min(const std::vector<uint64_t> &point) {
 
     uint64_t min_v = UINT64_MAX;
     uint64_t h1 = H1, h2 = H2;
 
-    hash(&a[0], 2, &h1, &h2);
+    hash(&point[0], 2, &h1, &h2);
     for (auto i = 0; i < hashcount; i++) {
       uint64_t sum = 0;
       for (auto &l : layers) {
@@ -474,6 +474,18 @@ struct Globimap {
       min_v = std::min(min_v, sum);
     }
     return (RT)min_v;
+  }
+
+  std::vector<uint64_t> to_hashfn(const std::vector<uint64_t> &point) {
+    std::vector<uint64_t> res;
+    res.resize(point.size());
+    for (auto i = 0; i < point.size(); i += 2) {
+      uint64_t h1 = H1, h2 = H2;
+      hash(&point[i], 2, &h1, &h2);
+      res[i] = h1;
+      res[i + 1] = h2;
+    }
+    return res;
   }
 
   uint64_t byte_size() {
@@ -506,6 +518,11 @@ struct Globimap {
     ss << "]\n}" << std::endl;
 
     return ss.str();
+  }
+
+  bool compaction() {
+    // TODO look at max values of higher layer and see if they can be collapsed
+    // by increasing bit depth of lower layers
   }
 };
 
