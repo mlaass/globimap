@@ -1,3 +1,15 @@
 [submodule "lib/pybind11"]
 	path = lib/pybind11
 	url = git@github.com:pybind/pybind11.git
+[submodule "lib/HighFive"]
+	path = lib/HighFive
+	url = git@github.com:BlueBrain/HighFive.git
+[submodule "lib/tqdm.cpp"]
+	path = lib/tqdm.cpp
+	url = git@github.com:tqdm/tqdm.cpp.git
+[submodule "lib/boost-headers-only"]
+	path = lib/boost-headers-only
+	url = git@github.com:scipy/boost-headers-only.git
+[submodule "lib/tqdm-cpp"]
+	path = lib/tqdm-cpp
+	url = git@github.com:mraggi/tqdm-cpp.git
