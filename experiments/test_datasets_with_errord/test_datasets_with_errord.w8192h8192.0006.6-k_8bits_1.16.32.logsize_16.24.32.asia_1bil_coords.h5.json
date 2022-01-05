@@ -1,0 +1,47 @@
+{"summary":{
+"byte_size": 17213431808,
+"kb_size": 1.681e+07,
+"mb_size": 16416,
+"collect_input": true,
+"unique_input": 8174,
+"errors": 0,
+"error_rate": 0.0250277,
+"layers": [
+{
+"bits:": 1,
+"size:": 65536,
+"byte_size:": 8192,
+"foz:": 0.368591,
+"zeros:": 24156,
+"sum:": 41380,
+"min:": 0,
+"max:": 1,
+"mean:": 0.631409
+},
+{
+"bits:": 16,
+"size:": 16777216,
+"byte_size:": 33554432,
+"foz:": 0.996126,
+"zeros:": 16712217,
+"sum:": 2691829053,
+"min:": 0,
+"max:": 65535,
+"mean:": 160.446
+},
+{
+"bits:": 32,
+"size:": 4294967296,
+"byte_size:": 17179869184,
+"foz:": 0.999991,
+"zeros:": 4294930520,
+"sum:": 5308109087,
+"min:": 0,
+"max:": 1566861,
+"mean:": 1.23589
+}
+]
+}
+,
+"insert_time": 81.7333,
+"errord_time": 3.87142}
