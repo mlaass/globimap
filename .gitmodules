@@ -13,3 +13,6 @@
 [submodule "lib/tqdm-cpp"]
 	path = lib/tqdm-cpp
 	url = git@github.com:mraggi/tqdm-cpp.git
+[submodule "lib/shapelib"]
+	path = lib/shapelib
+	url = git@github.com:OSGeo/shapelib.git
