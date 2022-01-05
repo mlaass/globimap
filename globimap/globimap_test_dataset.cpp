@@ -1,23 +1,15 @@
 #include "globimap_v2.hpp"
 #include <chrono>
+#include <fstream>
 #include <iostream>
 #include <math.h>
-
-#include <fstream>
-#include <highfive/H5File.hpp>
-#include <iostream>
 #include <string>
+
+#include <highfive/H5File.hpp>
 #include <tqdm.hpp>
 #include <tqdm/tqdm.h>
 
-#include "test_config.hpp"
-#include <sys/stat.h>
-#include <unistd.h>
-
-inline bool file_exists(const std::string &name) {
-  struct stat buffer;
-  return (stat(name.c_str(), &buffer) == 0);
-}
+#include "globimap_test_config.hpp"
 
 const std::string base_path = "/home/moritz/tf/pointclouds_2d/data/";
 const std::string experiments_path = "/home/moritz/tf/globimap/experiments/";
@@ -68,8 +60,7 @@ static std::string test_encode(globimap::Globimap<> &g, const std::string &name,
   auto t2 = high_resolution_clock::now();
   duration<double, std::milli> insert_time = t2 - t1;
   std::stringstream ss;
-  ss << "{\"summary\":" << g.summary() << ",\n";
-  ss << "\"insert_time\": " << insert_time.count() / 1000.0 << ",\n";
+
   if (errord) {
 
     auto t3 = high_resolution_clock::now();
@@ -79,7 +70,14 @@ static std::string test_encode(globimap::Globimap<> &g, const std::string &name,
     /* Getting number of milliseconds as a double. */
     duration<double, std::milli> errord_time = t4 - t3;
 
+    ss << "{\"summary\":" << g.summary() << ",\n";
+    ss << "\"insert_time\": " << insert_time.count() / 1000.0 << ",\n";
     ss << "\"errord_time\": " << errord_time.count() / 1000.0 << "}"
+       << std::endl;
+  } else {
+
+    ss << "{\"summary\":" << g.summary() << ",\n";
+    ss << "\"insert_time\": " << insert_time.count() / 1000.0 << "\n}"
        << std::endl;
   }
   return ss.str();

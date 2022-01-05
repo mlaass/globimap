@@ -5,7 +5,7 @@
 #include <boost/geometry/geometries/geometries.hpp>
 #include <limits>
 
-namespace detail {
+namespace rasterize {
 
 namespace bg = boost::geometry;
 
@@ -20,7 +20,7 @@ struct Edge {
   int_t yMax, yMin; // min-max of edge
   float_t dX, dY;
   segment_t line;
-  Edge(point_t &a, point_t &b) : line{a, b} {
+  Edge(const point_t &a, const point_t &b) : line{a, b} {
     auto &pMin = (bg::get<1>(a) < bg::get<1>(b) ? a : b);
     auto &pMax = (bg::get<1>(a) < bg::get<1>(b) ? b : a);
 
@@ -70,11 +70,16 @@ template <typename point_t, typename float_t = double> struct Rasterizer {
     custom_scanline = std::make_pair(true, _scanline);
   }
 
-  void clear_scanline(int _scanline) {
-    custom_scanline = std::make_pair(false, 0);
+  void clear_scanline() { custom_scanline = std::make_pair(false, 0); }
+
+  void clear() {
+    clear_scanline();
+    ET.clear();
+    AL.clear();
   }
 
-  void init(polygon_t &p) {
+  void init(const polygon_t &p) {
+    clear();
     if (p.outer().size() < 3) // don't render invalid polygons
       return;
     // build edge table containing all edges n=>0, 0=>1, ...n-1=>n
@@ -167,7 +172,7 @@ template <typename point_t, typename float_t = double> struct Rasterizer {
     auto line = typename edge_t::segment_t(point_t(minX, scanline + 0.5),
                                            point_t(maxX, scanline + 0.5));
 
-    std::vector<point> output;
+    std::vector<point_t> output;
     for (auto &e : AL) {
       bg::intersection(line, e.line, output);
 #ifdef DEBUG_LOG
@@ -182,7 +187,7 @@ template <typename point_t, typename float_t = double> struct Rasterizer {
 #endif
     // assert(output.size() % 2 == 0);
     std::sort(output.begin(), output.end(),
-              ([](const point &a, const point &b) {
+              ([](const point_t &a, const point_t &b) {
                 // sort by x
                 return bg::get<0>(a) < bg::get<0>(b);
               }));
@@ -251,7 +256,7 @@ template <typename point_t, typename float_t = double> struct Rasterizer {
     }
 
     // sort according to X coordinate
-    AL.sort([](float_t a, float_t b) {
+    AL.sort([](const edge_t &a, const edge_t &b) {
       // it is an iterator pointing to Edge
       // sort by x and slope
       return ((a.xNorm < b.xNorm) || (a.xNorm == b.xNorm && a.slope < b.slope));
@@ -269,8 +274,8 @@ template <typename point_t, typename float_t = double> struct Rasterizer {
     // prepare scanline filling
     auto minX = std::floor(AL.front().minX - 2);
     auto maxX = std::ceil(AL.back().maxX);
-    auto line = edge_t::segment_t(point_t(minX, scanline + 0.5),
-                                  point_t(maxX, scanline + 0.5));
+    typename edge_t::segment_t line(point_t(minX, scanline + 0.5),
+                                    point_t(maxX, scanline + 0.5));
     auto it = AL.begin();
     bool inside = false;
 #ifdef DEBUG_LOG
@@ -309,7 +314,7 @@ template <typename point_t, typename float_t = double> struct Rasterizer {
 #endif
 
       if (inside)
-        putpixel((int)x, scanline);
+        putpixel(x, scanline);
     }
 #ifdef DEBUG_LOG
     std::cout << "]" << std::endl;
@@ -325,9 +330,9 @@ template <typename point_t, typename float_t = double> struct Rasterizer {
     return;
   }
 
-  template <typename func>
-  void rasterize(polygon_t &p, func putpixel, int step_id = STEP_RASTERIZE,
-                 int steps = -1) {
+  void rasterize(const polygon_t &p,
+                 std::function<void(float_t, float_t)> putpixel,
+                 int step_id = STEP_RASTERIZE, int steps = -1) {
     init(p);
 
     switch (step_id) {
@@ -346,7 +351,6 @@ template <typename point_t, typename float_t = double> struct Rasterizer {
   }
 };
 
-} // namespace detail
-using detail::Rasterizer;
+} // namespace rasterize
 
 #endif

@@ -1,4 +1,20 @@
-#pragma once
+
+#ifndef GLOBIMAP_TEST_CONFIG
+#define GLOBIMAP_TEST_CONFIG
+#include "globimap_v2.hpp"
+#include <chrono>
+#include <fstream>
+#include <iostream>
+#include <math.h>
+#include <string>
+
+#include <sys/stat.h>
+#include <unistd.h>
+
+inline bool file_exists(const std::string &name) {
+  struct stat buffer;
+  return (stat(name.c_str(), &buffer) == 0);
+}
 
 typedef std::vector<std::vector<globimap::LayerConfig>> config_t;
 
@@ -65,3 +81,4 @@ std::string configs_to_string(const config_t &cfgs) {
 
   return ss.str();
 }
+#endif

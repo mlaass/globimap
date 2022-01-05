@@ -15,4 +15,4 @@
 	url = git@github.com:mraggi/tqdm-cpp.git
 [submodule "lib/shapelib"]
 	path = lib/shapelib
-	url = git@github.com:OSGeo/shapelib.git
+	url = git@github.com:mlaass/shapelib.git

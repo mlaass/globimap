@@ -10,14 +10,9 @@
 #include <tqdm.hpp>
 #include <tqdm/tqdm.h>
 
-#include "test_config.hpp"
+#include "globimap_test_config.hpp"
 #include <sys/stat.h>
 #include <unistd.h>
-
-inline bool file_exists(const std::string &name) {
-  struct stat buffer;
-  return (stat(name.c_str(), &buffer) == 0);
-}
 
 const std::string base_path = "/home/moritz/tf/pointclouds_2d/data/";
 const std::string experiments_path = "/home/moritz/tf/globimap/experiments/";
@@ -46,16 +41,23 @@ static std::string test_cos(globimap::Globimap<> &g, const std::string &name,
   duration<double, std::milli> insert_time = t2 - t1;
   std::stringstream ss;
 
-  ss << "{\"summary\":" << g.summary() << ",\n";
-  ss << "\"insert_time\": " << insert_time.count() / 1000.0 << ",\n";
   if (errord) {
 
     auto t3 = high_resolution_clock::now();
     g.detect_errors(0, 0, width, height);
     auto t4 = high_resolution_clock::now();
+
+    /* Getting number of milliseconds as a double. */
     duration<double, std::milli> errord_time = t4 - t3;
 
+    ss << "{\"summary\":" << g.summary() << ",\n";
+    ss << "\"insert_time\": " << insert_time.count() / 1000.0 << ",\n";
     ss << "\"errord_time\": " << errord_time.count() / 1000.0 << "}"
+       << std::endl;
+  } else {
+
+    ss << "{\"summary\":" << g.summary() << ",\n";
+    ss << "\"insert_time\": " << insert_time.count() / 1000.0 << "\n}"
        << std::endl;
   }
   return ss.str();
