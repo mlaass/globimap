@@ -30,8 +30,14 @@ set(HIGHFIVE_PARALLEL_HDF5 OFF)
 
 add_subdirectory(lib/HighFive/)
 
-set(SOURCES_DATASET_TEST
-    globimap/globimap_dataset_test.cpp
+set(SOURCES_TEST_DATASET
+    globimap/globimap_test_dataset.cpp
+)
+set(SOURCES_TEST_POLYGON
+    globimap/globimap_test_polygon.cpp
+)
+set(SOURCES_TEST_COS
+    globimap/globimap_test_cos.cpp
 )
 
 include_directories(
@@ -39,14 +45,12 @@ include_directories(
    lib/tqdm.cpp/include
    lib/tqdm-cpp
    lib/boost-headers-only
+   lib/nlohmann_json
    )
 
-set(SOURCES_POLYGON_TEST
-    globimap/globimap_polygon_test.cpp
-)
-
-add_executable(test_datasets ${SOURCES_DATASET_TEST})
-# add_executable(test_polygon ${SOURCES_POLYGON_TEST})
+add_executable(test_datasets ${SOURCES_TEST_DATASET})
+add_executable(test_cos ${SOURCES_TEST_COS})
+#add_executable(test_polygon ${SOURCES_TEST_POLYGON})
 
 
 target_link_libraries(test_datasets HighFive)

@@ -1,0 +1,25 @@
+{"summary":{
+"byte_size": 8192,
+"kb_size": 8,
+"mb_size": 0.0078125,
+"collect_input": true,
+"unique_input": 4601,
+"errors": 78364,
+"error_rate": 0.00116771,
+"layers": [
+{
+"bits:": 1,
+"size:": 65536,
+"byte_size:": 8192,
+"foz:": 0.570633,
+"zeros:": 37397,
+"sum:": 28139,
+"min:": 0,
+"max:": 1,
+"mean:": 0.429367
+}
+]
+}
+,
+"insert_time": 195.797,
+"errord_time": 2.85884}

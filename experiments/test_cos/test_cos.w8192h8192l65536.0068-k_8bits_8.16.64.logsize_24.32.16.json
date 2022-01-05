@@ -2,10 +2,7 @@
 "byte_size": 8607236096,
 "kb_size": 8.4055e+06,
 "mb_size": 8208.5,
-"collect_input": true,
-"unique_input": 8190,
-"errors": 0,
-"error_rate": 0,
+"collect_input": false,
 "layers": [
 {
 "bits:": 8,
@@ -15,7 +12,7 @@
 "zeros:": 16711842,
 "sum:": 524288,
 "min:": 0,
-"max:": 28,
+"max:": 26,
 "mean:": 0.03125
 },
 {
@@ -43,5 +40,4 @@
 ]
 }
 ,
-"insert_time": 0.00906308,
-"errord_time": 6.92055}
+"insert_time": 0.00522087,

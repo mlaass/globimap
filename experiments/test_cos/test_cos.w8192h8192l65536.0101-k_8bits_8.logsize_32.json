@@ -2,10 +2,7 @@
 "byte_size": 4294967296,
 "kb_size": 4.1943e+06,
 "mb_size": 4096,
-"collect_input": true,
-"unique_input": 8190,
-"errors": 0,
-"error_rate": 0,
+"collect_input": false,
 "layers": [
 {
 "bits:": 8,
@@ -21,5 +18,4 @@
 ]
 }
 ,
-"insert_time": 0.00904762,
-"errord_time": 10.0214}
+"insert_time": 0.00524279,
