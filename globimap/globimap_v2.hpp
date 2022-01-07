@@ -8,6 +8,7 @@
 #include <iterator>
 #include <limits>
 #include <list>
+#include <map>
 #include <set>
 #include <sstream>
 #include <unordered_set>
@@ -322,12 +323,6 @@ struct Layer {
   }
 };
 
-struct pair_hash {
-  inline std::size_t operator()(const std::pair<uint64_t, uint64_t> &v) const {
-    return v.first * H1 + v.second * H2;
-  }
-};
-
 struct LayerConfig {
   uint bits;
   uint logsize;
@@ -350,19 +345,24 @@ struct FilterConfig {
     return ss.str();
   }
 };
-
+/***
+ *
+ ***/
 template <typename BITS1 = bool, typename BITS8 = uint8_t,
           typename BITS16 = uint16_t, typename BITS32 = uint32_t,
           typename BITS64 = uint64_t>
 struct Globimap {
-  typedef std::unordered_set<std::pair<uint64_t, uint64_t>, pair_hash>
-      coord_set_t;
+  typedef std::pair<uint32_t, uint32_t> coord_t;
+
+  typedef std::map<coord_t, uint32_t> coord_map_t;
 
   std::vector<Layer<BITS1, BITS8, BITS16, BITS32, BITS64>> layers;
-  coord_set_t unique_input, errors;
   uint64_t hashcount;
-  double error_rate;
+
   bool collect_input;
+  coord_map_t errors;
+  coord_map_t counter;
+  double error_rate;
 
   Globimap(const FilterConfig &conf, bool collect = false)
       : collect_input(collect) {
@@ -384,8 +384,14 @@ struct Globimap {
 
   void put(const std::vector<uint64_t> &point) {
     uint64_t h1 = H1, h2 = H2;
-    if (collect_input)
-      unique_input.insert({point[0], point[1]});
+    if (collect_input) {
+      coord_t p = {point[0], point[1]};
+      if (counter.count(p) == 0) {
+        counter[p] = 1;
+      } else {
+        counter[p] += 1;
+      }
+    }
     hash(&point[0], 2, &h1, &h2);
     auto all_full = true;
     for (uint64_t i = 0; i < static_cast<uint64_t>(hashcount); i++) {
@@ -400,23 +406,6 @@ struct Globimap {
       }
     }
     assert(!all_full); // insufficent size in filter configuration
-  }
-
-  void detect_errors(uint64_t x, uint64_t y, uint64_t width, uint64_t height) {
-    if (unique_input.size() == 0) {
-      return;
-    }
-
-    for (auto u = 0; u < width; u++) {
-      for (auto v = 0; v < height; v++) {
-        if (!unique_input.count({x + u, y + v}) > 0) {
-          if (get_bool({x + u, y + v})) {
-            errors.insert({x + u, y + v});
-          }
-        }
-      }
-    }
-    error_rate = (double)errors.size() / (double)(width * height);
   }
 
   bool get_bool(const std::vector<uint64_t> &point) {
@@ -452,7 +441,7 @@ struct Globimap {
     return (RT)sum / (RT)hashcount;
   }
 
-  template <typename RT> RT get_min(const std::vector<uint64_t> &point) {
+  uint64_t get_min(const std::vector<uint64_t> &point) {
 
     uint64_t min_v = UINT64_MAX;
     uint64_t h1 = H1, h2 = H2;
@@ -462,18 +451,18 @@ struct Globimap {
       uint64_t sum = 0;
       for (auto &l : layers) {
         uint64_t k = (h1 + (i + 1) * h2) & l.mask;
-        auto v = l.get(k);
+        auto v = l.template get<uint64_t>(k);
         if (v == 0) {
           return 0;
         }
         sum += v;
-        if (!l.threshold()) {
+        if (!l.threshold(k)) {
           break;
         }
       }
       min_v = std::min(min_v, sum);
     }
-    return (RT)min_v;
+    return min_v;
   }
 
   std::vector<uint64_t> to_hashfn(const std::vector<uint64_t> &point) {
@@ -496,6 +485,103 @@ struct Globimap {
     return s;
   }
 
+  void detect_errors(uint64_t x, uint64_t y, uint64_t width, uint64_t height) {
+    if (counter.size() == 0) {
+      return;
+    }
+
+    for (auto u = 0; u < width; u++) {
+      for (auto v = 0; v < height; v++) {
+        coord_t p = {x + u, y + v};
+        if (counter.count(p) == 0) {
+          if (get_bool({x + u, y + v})) {
+            errors[p] = 1;
+          }
+        } else {
+          auto m = (uint64_t)get_min({x + u, y + v});
+          uint64_t d = std::abs((int64_t)m - (int64_t)counter[p]);
+          if (d != 0)
+            errors[p] = d;
+        }
+      }
+    }
+    counter.clear();
+    error_rate = (double)errors.size() / (double)(width * height);
+  }
+
+  std::vector<uint64_t> error_magnitudes() {
+    std::vector<uint64_t> err_mag;
+    err_mag.reserve(errors.size());
+    for (const auto &ep : errors) {
+      err_mag.push_back(ep.second);
+    }
+    return err_mag;
+  }
+
+  std::vector<double> make_histogram(std::vector<uint64_t> &values,
+                                     const uint size = 1024) {
+    std::sort(values.begin(), values.end());
+    uint bucket_size = values.size() / size;
+    uint rest = values.size() % size;
+    uint step = size / rest;
+    std::vector<double> res({0});
+    res.resize(size);
+
+    auto off = 0;
+    for (auto i = 0; i < size; ++i) {
+      double bucket = 0;
+      uint b = bucket_size;
+      for (auto x = 0; x < b; x++) {
+        bucket += values[off + x];
+      }
+      off += b;
+      if (bucket != 0)
+        bucket /= (double)b;
+      res[i] = bucket;
+    }
+    return res;
+  }
+  std::string error_summary() {
+    std::stringstream ss;
+    ss << "{\n";
+    ss << "\"unique_input\": " << counter.size() << ",\n";
+    ss << "\"errors\": " << errors.size() << ",\n";
+    ss << "\"error_rate\": " << error_rate << ",\n";
+
+    auto emag = error_magnitudes();
+    auto hist = make_histogram(emag);
+    uint64_t mmin = UINT64_MAX;
+    uint64_t mmax = 0;
+    uint64_t sum = 0;
+    for (auto e : emag) {
+      mmin = std::min(e, mmin);
+      mmax = std::max(e, mmax);
+      sum += e;
+    }
+
+    double mmean = 0;
+    if (emag.size() > 0)
+      mmean = (double)sum / (double)emag.size();
+
+    ss << "\"magnitude_min\": " << mmin << ",\n";
+    ss << "\"magnitude_max\": " << mmax << ",\n";
+    ss << "\"magnitude_sum\": " << sum << ",\n";
+    ss << "\"magnitude_mean\": " << mmean << ",\n";
+    ss << "\"histogram\": [";
+    for (auto i = 0; i < hist.size(); ++i) {
+      ss << hist[i] << ((i < (hist.size() - 1)) ? ", " : "");
+    }
+    ss << "]\n";
+
+    // ss << "\"magnitudes\": [";
+    // for (auto i = 0; i < emag.size(); ++i) {
+    //   ss << emag[i] << ((i < (emag.size() - 1)) ? ", " : "");
+    // }
+    // ss << "]\n";
+
+    ss << "\n}" << std::endl;
+    return ss.str();
+  }
   std::string summary_config() { return "{}"; }
   std::string summary() {
     std::stringstream ss;
@@ -506,9 +592,7 @@ struct Globimap {
        << ",\n";
     ss << "\"collect_input\": " << (collect_input ? "true" : "false") << ",\n";
     if (collect_input) {
-      ss << "\"unique_input\": " << unique_input.size() << ",\n";
-      ss << "\"errors\": " << errors.size() << ",\n";
-      ss << "\"error_rate\": " << error_rate << ",\n";
+      ss << "\"error_summary\": " << error_summary() << ",\n";
     }
     ss << "\"layers\": [\n";
 
@@ -521,8 +605,14 @@ struct Globimap {
   }
 
   bool compaction() {
-    // TODO look at max values of higher layer and see if they can be collapsed
-    // by increasing bit depth of lower layers
+    // TODO look at max values of higher layer and see if they can be
+    // collapsed by increasing bit depth of lower layers
+    for (auto i = layers.end(); i != layers.begin(); i--) {
+      if (i->stats().max == 0) {
+        layers.erase(i);
+        i = layers.end();
+      }
+    }
   }
 };
 

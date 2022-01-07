@@ -84,14 +84,14 @@ int main() {
           << "-" << fc.to_string() << "json";
       if (file_exists(fss.str())) {
         std::cout << "file already exists: " << fss.str() << std::endl;
-        break;
+      } else {
+        std::cout << "run: " << fss.str() << std::endl;
+        std::ofstream out(fss.str());
+        auto g = globimap::Globimap(fc, true);
+        out << test_cos(g, fc.to_string(), 8192, 8192, 65536, true);
+        out.close();
+        x++;
       }
-      std::cout << "run: " << fss.str() << std::endl;
-      std::ofstream out(fss.str());
-      auto g = globimap::Globimap(fc, true);
-      out << test_cos(g, fc.to_string(), 8192, 8192, 65536, true);
-      out.close();
-      x++;
     }
   }
   {

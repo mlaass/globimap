@@ -17,9 +17,16 @@ inline bool file_exists(const std::string &name) {
 }
 
 typedef std::vector<std::vector<globimap::LayerConfig>> config_t;
+std::string to_string(std::vector<globimap::LayerConfig> conf) {
+  std::stringstream ss;
+  for (const globimap::LayerConfig &x : conf) {
+    ss << x.bits << "." << x.logsize << ";";
+  }
+  return ss.str();
+}
 
 void get_configurations(config_t &cfgs,
-                        const std::vector<uint> &sizes = {16, 24, 32}) {
+                        const std::vector<uint> &sizes = {16, 20, 24, 28}) {
 
   std::vector<uint> bits{1, 8, 16, 32, 64};
   std::vector<uint> sz = sizes;
@@ -33,21 +40,28 @@ void get_configurations(config_t &cfgs,
   std::cout << "make configurations ..." << sz_perms.size() << std::endl;
 
   auto si = 0;
+  std::map<std::string, int> exist;
+
   for (auto &s : sz_perms) {
-    std::cout << si << " : " << s[0] << ", ";
+    std::cout << si << " : " << s[0] << ", " << std::endl;
     for (auto a = 0; a < 2; a++) {
       std::vector<globimap::LayerConfig> x = {};
-      std::cout << a << ", ";
+      // std::cout << a << ", ";
       x.push_back({bits[a], s[0]});
       cfgs.push_back(x);
       for (auto b = a + 1; b < 5; b++) {
-        std::cout << b << ", ";
+        // std::cout << b << ", ";
         x.push_back({bits[b], s[1]});
         cfgs.push_back(x);
         for (auto c = b + 1; c < 5; c++) {
-          std::cout << c << ", ";
+          // std::cout << c << ", ";
           x.push_back({bits[c], s[2]});
-          cfgs.push_back(x);
+          auto s = to_string(x);
+          if (exist.count(s) == 0) {
+            cfgs.push_back(x);
+            exist[s] = 1;
+            std::cout << s << std::endl;
+          }
           x.pop_back();
         }
         x.pop_back();
