@@ -1,0 +1,21 @@
+{"summary":{
+"byte_size": 536870912,
+"kb_size": 524288,
+"mb_size": 512,
+"collect_input": false,
+"layers": [
+{
+"bits:": 1,
+"size:": 4294967296,
+"byte_size:": 536870912,
+"foz:": 0.999985,
+"zeros:": 4294901904,
+"sum:": 65392,
+"min:": 0,
+"max:": 1,
+"mean:": 1.52253e-05
+}
+]
+}
+,
+"insert_time": 48.4942,

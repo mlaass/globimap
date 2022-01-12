@@ -71,6 +71,8 @@ void get_configurations(config_t &cfgs,
     std::cout << "\n" << std::endl;
     si++;
   }
+
+  std::cout << "created configurations: " << cfgs.size() << std::endl;
 }
 
 std::string configs_to_string(const config_t &cfgs) {
