@@ -39,6 +39,30 @@
 #endif
 
 namespace globimap {
+template <typename T>
+static std::vector<double> make_histogram(std::vector<T> &values,
+                                          const uint size = 1024) {
+  std::sort(values.begin(), values.end());
+  uint bucket_size = values.size() / size;
+  uint rest = values.size() % size;
+  uint step = size / rest;
+  std::vector<double> res({0});
+  res.resize(size);
+
+  auto off = 0;
+  for (auto i = 0; i < size; ++i) {
+    double bucket = 0;
+    uint b = bucket_size;
+    for (auto x = 0; x < b; x++) {
+      bucket += values[off + x];
+    }
+    off += b;
+    if (bucket != 0)
+      bucket /= (double)b;
+    res[i] = bucket;
+  }
+  return res;
+}
 
 static const uint64_t H1 = 8589845122, H2 = 8465418721;
 
@@ -405,7 +429,7 @@ struct Globimap {
         }
       }
     }
-    assert(!all_full); // insufficent size in filter configuration
+    // assert(!all_full); // insufficent size in filter configuration
   }
 
   bool get_bool(const std::vector<uint64_t> &point) {
@@ -443,10 +467,30 @@ struct Globimap {
 
   uint64_t get_min(const std::vector<uint64_t> &point) {
 
-    uint64_t min_v = UINT64_MAX;
     uint64_t h1 = H1, h2 = H2;
 
     hash(&point[0], 2, &h1, &h2);
+    uint64_t min_v = UINT64_MAX;
+    for (auto i = 0; i < hashcount; i++) {
+      uint64_t sum = 0;
+      for (auto &l : layers) {
+        uint64_t k = (h1 + (i + 1) * h2) & l.mask;
+        auto v = l.template get<uint64_t>(k);
+        if (v == 0) {
+          return 0;
+        }
+        sum += v;
+        if (!l.threshold(k)) {
+          break;
+        }
+      }
+      min_v = std::min(min_v, sum);
+    }
+    return min_v;
+  }
+  uint64_t get_min_hs(uint64_t h1, uint64_t h2) {
+
+    uint64_t min_v = UINT64_MAX;
     for (auto i = 0; i < hashcount; i++) {
       uint64_t sum = 0;
       for (auto &l : layers) {
@@ -468,13 +512,30 @@ struct Globimap {
   std::vector<uint64_t> to_hashfn(const std::vector<uint64_t> &point) {
     std::vector<uint64_t> res;
     res.resize(point.size());
-    for (auto i = 0; i < point.size(); i += 2) {
+    for (auto i = 0; i < point.size() - 1; i += 2) {
       uint64_t h1 = H1, h2 = H2;
       hash(&point[i], 2, &h1, &h2);
       res[i] = h1;
       res[i + 1] = h2;
     }
     return res;
+  }
+
+  uint64_t get_sum_hashfn(const std::vector<uint64_t> &hashfn) {
+    uint64_t sum = 0;
+    for (auto i = 0; i < hashfn.size() - 1; i += 2) {
+      sum += get_min_hs(hashfn[i], hashfn[i + 1]);
+    }
+    return sum;
+  }
+  uint64_t get_sum_raster_collected(const std::vector<uint64_t> &raster) {
+    uint64_t sum = 0;
+    for (auto i = 0; i < raster.size() - 1; i += 2) {
+      coord_t p = {raster[i], raster[i + 1]};
+      if (counter.count(p) > 0)
+        sum += counter[p];
+    }
+    return sum;
   }
 
   uint64_t byte_size() {
@@ -518,29 +579,6 @@ struct Globimap {
     return err_mag;
   }
 
-  std::vector<double> make_histogram(std::vector<uint64_t> &values,
-                                     const uint size = 1024) {
-    std::sort(values.begin(), values.end());
-    uint bucket_size = values.size() / size;
-    uint rest = values.size() % size;
-    uint step = size / rest;
-    std::vector<double> res({0});
-    res.resize(size);
-
-    auto off = 0;
-    for (auto i = 0; i < size; ++i) {
-      double bucket = 0;
-      uint b = bucket_size;
-      for (auto x = 0; x < b; x++) {
-        bucket += values[off + x];
-      }
-      off += b;
-      if (bucket != 0)
-        bucket /= (double)b;
-      res[i] = bucket;
-    }
-    return res;
-  }
   std::string error_summary() {
     std::stringstream ss;
     ss << "{\n";

@@ -8,3 +8,6 @@ globimap/**.egg-info
 **.egg-info
 **.so
 .vscode
+.idea
+cmake-build-debug
+build
