@@ -266,7 +266,7 @@ struct Layer {
 
     switch (bits) {
     case 1: {
-      PARA_FOR
+#pragma omp parallel for
       for (size_t i = 0; i < f1.size(); i++) {
         PARA_ATOMIC
         s.sum += f1[i];
@@ -277,7 +277,7 @@ struct Layer {
       }
     } break;
     case 8: {
-      PARA_FOR
+#pragma omp parallel for
       for (size_t i = 0; i < f8.size(); i++) {
         PARA_ATOMIC
         s.sum += f8[i];
@@ -288,7 +288,7 @@ struct Layer {
       }
     } break;
     case 16: {
-      PARA_FOR
+#pragma omp parallel for
       for (size_t i = 0; i < f16.size(); i++) {
         PARA_ATOMIC
         s.sum += f16[i];
@@ -299,7 +299,7 @@ struct Layer {
       }
     } break;
     case 32: {
-      PARA_FOR
+#pragma omp parallel for
       for (size_t i = 0; i < f32.size(); i++) {
         PARA_ATOMIC
         s.sum += f32[i];
@@ -310,7 +310,7 @@ struct Layer {
       }
     } break;
     case 64: {
-      PARA_FOR
+#pragma omp parallel for
       for (size_t i = 0; i < f64.size(); i++) {
         PARA_ATOMIC
         s.sum += f64[i];
@@ -512,6 +512,7 @@ struct Globimap {
   std::vector<uint64_t> to_hashfn(const std::vector<uint64_t> &point) {
     std::vector<uint64_t> res;
     res.resize(point.size());
+#pragma omp parallel for
     for (auto i = 0; i < point.size() - 1; i += 2) {
       uint64_t h1 = H1, h2 = H2;
       hash(&point[i], 2, &h1, &h2);
@@ -523,6 +524,7 @@ struct Globimap {
 
   uint64_t get_sum_hashfn(const std::vector<uint64_t> &hashfn) {
     uint64_t sum = 0;
+#pragma omp parallel for
     for (auto i = 0; i < hashfn.size() - 1; i += 2) {
       sum += get_min_hs(hashfn[i], hashfn[i + 1]);
     }
@@ -530,8 +532,10 @@ struct Globimap {
   }
   uint64_t get_sum_raster_collected(const std::vector<uint64_t> &raster) {
     uint64_t sum = 0;
+#pragma omp parallel for
     for (auto i = 0; i < raster.size() - 1; i += 2) {
       coord_t p = {raster[i], raster[i + 1]};
+
       if (counter.count(p) > 0)
         sum += counter[p];
     }
@@ -550,7 +554,7 @@ struct Globimap {
     if (counter.size() == 0) {
       return;
     }
-
+#pragma omp parallel for
     for (auto u = 0; u < width; u++) {
       for (auto v = 0; v < height; v++) {
         coord_t p = {x + u, y + v};

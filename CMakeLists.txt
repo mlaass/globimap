@@ -55,10 +55,21 @@ add_executable(test_datasets ${SOURCES_TEST_DATASET})
 add_executable(test_polygon ${SOURCES_TEST_POLYGON})
 add_executable(test_cos ${SOURCES_TEST_COS})
 
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
 
-target_link_libraries(test_datasets HighFive)
+target_link_libraries(test_datasets 
+PUBLIC HighFive
+PUBLIC OpenMP::OpenMP_CXX)
+target_link_libraries(test_datasets 
+PUBLIC HighFive
+PUBLIC OpenMP::OpenMP_CXX)
 target_link_libraries(test_polygon
-HighFive
-shp
+PUBLIC HighFive
+PUBLIC shp
+PUBLIC OpenMP::OpenMP_CXX
 )
+
+endif()
+
 

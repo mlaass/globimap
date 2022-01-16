@@ -11,3 +11,4 @@ globimap/**.egg-info
 .idea
 cmake-build-debug
 build
+globimap/loc.hpp

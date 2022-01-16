@@ -14,6 +14,7 @@
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 
+#include "loc.hpp"
 #include "rasterizer.hpp"
 #include "shapefile.hpp"
 
@@ -26,12 +27,16 @@ typedef bg::model::polygon<point_t> polygon_t;
 
 typedef std::vector<polygon_t> poly_collection_t;
 
+#ifndef TUM1_ICAML_ORG
 const std::string base_path = "/mnt/G/datasets/atlas/";
 const std::string vector_base_path = "/mnt/G/datasets/vector/";
 const std::string experiments_path =
     "/home/moritz/workspace/bgdm/globimap/experiments/";
-// const std::string base_path = "/home/moritz/tf/pointclouds_2d/data/";
-// const std::string experiments_path = "/home/moritz/tf/globimap/experiments/";
+#else
+const std::string base_path = "/home/moritz/tf/pointclouds_2d/data/";
+const std::string experiments_path = "/home/moritz/tf/globimap/experiments/";
+const std::string vector_base_path = "/home/moritz/tf/vector/";
+#endif
 
 std::vector<std::string> datasets{"twitter_1mio_coords.h5",
                                   "twitter_10mio_coords.h5"};
@@ -227,7 +232,7 @@ int main() {
     uint width = 16 * 8192, height = 16 * 8192;
     std::string exp_name = "test_polygons";
     mkdir((experiments_path + exp_name).c_str(), 0777);
-    for (auto c : {cfgs[32]}) {
+    for (auto c : cfgs) {
       globimap::FilterConfig fc{k, c};
       std::cout << "fc: " << fc.to_string() << std::endl;
       auto y = 0;
