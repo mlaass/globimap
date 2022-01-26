@@ -73,6 +73,7 @@ int main() {
     uint k = 8;
     auto x = 0;
     std::string exp_name = "test_cos_with_errord";
+    save_configs(experiments_path + std::string("config_") + exp_name, cfgs);
 
     mkdir((experiments_path + exp_name).c_str(), 0777);
     for (auto c : cfgs) {
@@ -98,6 +99,7 @@ int main() {
     uint k = 8;
     auto x = 0;
     std::string exp_name = "test_cos";
+    save_configs(experiments_path + std::string("config_") + exp_name, cfgs);
 
     mkdir((experiments_path + exp_name).c_str(), 0777);
     for (auto c : cfgs) {

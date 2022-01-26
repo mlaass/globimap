@@ -92,6 +92,7 @@ int main() {
     auto x = 0;
     uint width = 8192, height = 8192;
     std::string exp_name = "test_datasets_with_errord";
+    save_configs(experiments_path + std::string("config_") + exp_name, cfgs);
     mkdir((experiments_path + exp_name).c_str(), 0777);
     for (auto c : cfgs) {
       globimap::FilterConfig fc{k, c};
@@ -121,6 +122,7 @@ int main() {
     auto x = 0;
     uint width = 8192, height = 8192;
     std::string exp_name = "test_datasets";
+    save_configs(experiments_path + std::string("config_") + exp_name, cfgs);
     mkdir((experiments_path + exp_name).c_str(), 0777);
     for (auto c : cfgs) {
       globimap::FilterConfig fc{k, c};

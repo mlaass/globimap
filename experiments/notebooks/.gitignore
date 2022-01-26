@@ -1,0 +1,4 @@
+*.csv
+*.geojson
+key.pem
+cert.pem

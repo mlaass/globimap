@@ -1,0 +1,1 @@
+find experiments -size  0 -print -delete

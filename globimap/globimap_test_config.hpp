@@ -97,4 +97,10 @@ std::string configs_to_string(const config_t &cfgs) {
 
   return ss.str();
 }
+
+void save_configs(const std::string &fn, const config_t &cfgs) {
+  auto outc = std::ofstream(fn);
+  outc << configs_to_string(cfgs);
+  outc.close();
+}
 #endif
