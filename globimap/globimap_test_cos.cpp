@@ -65,7 +65,7 @@ static std::string test_cos(globimap::Globimap<> &g, const std::string &name,
 
 int main() {
   std::vector<std::vector<globimap::LayerConfig>> cfgs;
-  get_configurations(cfgs);
+  get_configurations(cfgs, {16, 20, 24, 28}, {1, 8, 16, 32, 64});
 
   // outc << configs_to_string(cfgs);
   // outc.close();

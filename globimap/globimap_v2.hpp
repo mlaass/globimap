@@ -554,19 +554,21 @@ struct Globimap {
     if (counter.size() == 0) {
       return;
     }
-#pragma omp parallel for
     for (auto u = 0; u < width; u++) {
       for (auto v = 0; v < height; v++) {
         coord_t p = {x + u, y + v};
         if (counter.count(p) == 0) {
+
           if (get_bool({x + u, y + v})) {
             errors[p] = 1;
           }
         } else {
           auto m = (uint64_t)get_min({x + u, y + v});
           uint64_t d = std::abs((int64_t)m - (int64_t)counter[p]);
-          if (d != 0)
+
+          if (d != 0) {
             errors[p] = d;
+          }
         }
       }
     }

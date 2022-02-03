@@ -25,16 +25,28 @@ std::string to_string(std::vector<globimap::LayerConfig> conf) {
   return ss.str();
 }
 
-void get_configurations(config_t &cfgs,
-                        const std::vector<uint> &sizes = {16, 20, 24, 28}) {
+void get_configurations(config_t &cfgs, const std::vector<uint> &sizes,
+                        const std::vector<uint> &bitdepths) {
 
-  std::vector<uint> bits{1, 8, 16, 32, 64};
+  std::vector<uint> bits = bitdepths;
   std::vector<uint> sz = sizes;
+  std::cout << "bits: ";
+  for (auto b : bits)
+    std::cout << b << ", ";
+  std::cout << std::endl;
+  std::cout << "sizes: ";
+  for (auto s : sz)
+    std::cout << s << ", ";
+  std::cout << std::endl;
 
   std::vector<std::vector<uint>> sz_perms;
   std::cout << "make permutations ..." << std::endl;
   do {
     sz_perms.push_back(sz);
+    std::cout << "sizes: ";
+    for (auto s : sz)
+      std::cout << s << ", ";
+    std::cout << std::endl;
   } while (std::next_permutation(sz.begin(), sz.end()));
 
   std::cout << "make configurations ..." << sz_perms.size() << std::endl;
@@ -49,11 +61,11 @@ void get_configurations(config_t &cfgs,
       // std::cout << a << ", ";
       x.push_back({bits[a], s[0]});
       cfgs.push_back(x);
-      for (auto b = a + 1; b < 5; b++) {
+      for (auto b = a + 1; b < bits.size(); b++) {
         // std::cout << b << ", ";
         x.push_back({bits[b], s[1]});
         cfgs.push_back(x);
-        for (auto c = b + 1; c < 5; c++) {
+        for (auto c = b + 1; c < bits.size(); c++) {
           // std::cout << c << ", ";
           x.push_back({bits[c], s[2]});
           auto s = to_string(x);

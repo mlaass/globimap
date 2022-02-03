@@ -40,6 +40,9 @@ set(SOURCES_TEST_POLYGON
 set(SOURCES_TEST_COS
     globimap/globimap_test_cos.cpp
 )
+set(SOURCES_TEST_DATASETS_FOR_K
+    globimap/globimap_test_datasets_for_k.cpp
+)
 
 include_directories(
    lib/HighFive/include/highfive
@@ -52,6 +55,7 @@ include_directories(
    )
 
 add_executable(test_datasets ${SOURCES_TEST_DATASET})
+add_executable(test_datasets_for_k ${SOURCES_TEST_DATASETS_FOR_K})
 add_executable(test_polygon ${SOURCES_TEST_POLYGON})
 add_executable(test_cos ${SOURCES_TEST_COS})
 
@@ -61,9 +65,15 @@ if(OpenMP_CXX_FOUND)
 target_link_libraries(test_datasets 
 PUBLIC HighFive
 PUBLIC OpenMP::OpenMP_CXX)
+
 target_link_libraries(test_datasets 
 PUBLIC HighFive
 PUBLIC OpenMP::OpenMP_CXX)
+
+target_link_libraries(test_datasets_for_k 
+PUBLIC HighFive
+PUBLIC OpenMP::OpenMP_CXX)
+
 target_link_libraries(test_polygon
 PUBLIC HighFive
 PUBLIC shp

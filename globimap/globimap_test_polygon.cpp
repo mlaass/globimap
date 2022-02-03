@@ -216,7 +216,7 @@ static void encode_dataset(globimap::Globimap<> &g, const std::string &name,
 
 int main() {
   std::vector<std::vector<globimap::LayerConfig>> cfgs;
-  get_configurations(cfgs);
+  get_configurations(cfgs, {16, 20, 24, 28}, {1, 8, 16, 32, 64});
   // uint width = 8192, height = 8192;
   // for (auto shp : polygon_sets) {
   //   shp = vector_base_path + shp;

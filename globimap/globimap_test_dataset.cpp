@@ -85,7 +85,7 @@ static std::string test_encode(globimap::Globimap<> &g, const std::string &name,
 
 int main() {
   config_t cfgs;
-  get_configurations(cfgs);
+  get_configurations(cfgs, {16, 20, 24, 28}, {1, 8, 16, 32, 64});
 
   {
     uint k = 8;
