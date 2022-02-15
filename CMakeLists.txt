@@ -34,6 +34,9 @@ add_subdirectory(lib/shapelib/)
 set(SOURCES_TEST_DATASET
     globimap/globimap_test_dataset.cpp
 )
+set(SOURCES_TEST_DATASET_NEW
+    globimap/globimap_test_dataset_new.cpp
+)
 set(SOURCES_TEST_POLYGON
     globimap/globimap_test_polygon.cpp
 )
@@ -55,6 +58,7 @@ include_directories(
    )
 
 add_executable(test_datasets ${SOURCES_TEST_DATASET})
+add_executable(test_datasets_new ${SOURCES_TEST_DATASET_NEW})
 add_executable(test_datasets_for_k ${SOURCES_TEST_DATASETS_FOR_K})
 add_executable(test_polygon ${SOURCES_TEST_POLYGON})
 add_executable(test_cos ${SOURCES_TEST_COS})
@@ -67,6 +71,10 @@ PUBLIC HighFive
 PUBLIC OpenMP::OpenMP_CXX)
 
 target_link_libraries(test_datasets 
+PUBLIC HighFive
+PUBLIC OpenMP::OpenMP_CXX)
+
+target_link_libraries(test_datasets_new 
 PUBLIC HighFive
 PUBLIC OpenMP::OpenMP_CXX)
 
