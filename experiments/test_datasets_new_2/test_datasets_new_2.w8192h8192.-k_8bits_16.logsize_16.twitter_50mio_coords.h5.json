@@ -1,0 +1,27 @@
+{"summary":{
+"byte_size": 131072,
+"kb_size": 128,
+"mb_size": 0.125,
+"collect_input": false,
+"layers": [
+{
+"bits:": 16,
+"size:": 65536,
+"byte_size:": 131072,
+"foz:": 0.0166473,
+"zeros:": 1091,
+"sum:": 44709747,
+"min:": 0,
+"max:": 65535,
+"mean:": 682.217
+}
+]
+}
+,
+"perf": {"query_time":0.441134,
+"query_time_min":0.437387,
+"query_time_max":0.462677,
+"times":[0.437387, 0.462677, 0.440257, 0.440991, 0.438466, 0.438328, 0.438384, 0.438135, 0.438483, 0.438237],
+"num_queries":10000000,
+"insert_time": 2.5045
+}}

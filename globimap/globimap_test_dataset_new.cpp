@@ -94,6 +94,7 @@ static std::string test_encode(globimap::Globimap<> &g, const std::string &name,
       duration<double, std::milli> query_time = t6 - t5;
       double qt = query_time.count() / 1000.0;
       query_time_mean += qt;
+      times.push_back(qt);
       query_time_min = std::min(qt, query_time_min);
       query_time_max = std::max(qt, query_time_max);
     }
@@ -110,6 +111,7 @@ static std::string test_encode(globimap::Globimap<> &g, const std::string &name,
     ss << "\"perf\": {\"query_time\":" << query_time_mean << ",\n";
     ss << "\"query_time_min\":" << query_time_min << ",\n";
     ss << "\"query_time_max\":" << query_time_max << ",\n";
+    ss << "\"times\":" << tss.str() << ",\n";
     ss << "\"num_queries\":" << num_queries << ",\n";
     ss << "\"insert_time\": " << insert_time.count() / 1000.0 << "\n}}"
        << std::endl;
@@ -125,7 +127,7 @@ int main() {
     uint k = 8;
     auto x = 0;
     uint width = 8192, height = 8192;
-    std::string exp_name = "test_datasets_new";
+    std::string exp_name = "test_datasets_new_2";
     save_configs(experiments_path + std::string("config_") + exp_name, cfgs);
     mkdir((experiments_path + exp_name).c_str(), 0777);
     for (auto c : cfgs) {
