@@ -127,7 +127,7 @@ int main() {
     uint k = 8;
     auto x = 0;
     uint width = 8192, height = 8192;
-    std::string exp_name = "test_datasets_new_2";
+    std::string exp_name = "test_datasets_new_3";
     save_configs(experiments_path + std::string("config_") + exp_name, cfgs);
     mkdir((experiments_path + exp_name).c_str(), 0777);
     for (auto c : cfgs) {
