@@ -102,7 +102,7 @@ struct Layer {
       assert(false); // bits needs to be 1,8,16,32 or 64
     }
   }
-  template <typename T> T get(size_t i) {
+  template <typename T> T get(size_t i) const {
     switch (bits) {
     case 1:
       return static_cast<T>(f1[i]);
@@ -387,10 +387,12 @@ struct Globimap {
   coord_map_t errors;
   coord_map_t counter;
   double error_rate;
+  FilterConfig config;
 
   Globimap(const FilterConfig &conf, bool collect = false)
       : collect_input(collect) {
     hashcount = conf.hash_k;
+    config = conf;
 
     for (auto i = 0; i < conf.layers.size(); ++i) {
       assert(conf.layers[i].bits == 1 || conf.layers[i].bits == 8 ||
@@ -406,7 +408,13 @@ struct Globimap {
     }
   }
 
-  void put(const std::vector<uint64_t> &point) {
+  void put_all(const std::vector<uint64_t> &points) {
+    for (auto p = 0; p < points.size(); p += 2) {
+      putp(&points[p]);
+    }
+  }
+  void put(const std::vector<uint64_t> &point) { putp(&point[0]); }
+  void putp(const uint64_t *point) {
     uint64_t h1 = H1, h2 = H2;
     if (collect_input) {
       coord_t p = {point[0], point[1]};
@@ -540,6 +548,24 @@ struct Globimap {
         sum += counter[p];
     }
     return sum;
+  }
+
+  uint64_t get_sum_masked(const Globimap &mask) {
+    uint64_t sum = 0;
+#pragma omp parallel for
+    for (auto i = 0; i < layers[0].size; i++) {
+      if (mask.layers[0].template get<bool>(i & mask.layers[0].mask)) {
+        for (auto &l : layers) {
+          auto k = i & l.mask;
+          auto v = l.template get<uint64_t>(k);
+          sum += v;
+          if (!l.threshold(k)) {
+            break;
+          }
+        }
+      }
+    }
+    return sum / hashcount;
   }
 
   uint64_t byte_size() {

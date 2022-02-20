@@ -6,7 +6,7 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-set(CMAKE_CXX_FLAGS " -fopenmp -march=native -fPIC -I/usr/include/hdf5/serial")
+set(CMAKE_CXX_FLAGS " -fopenmp -march=native -std=c++17 -fPIC -I/usr/include/hdf5/serial -L/usr/lib/x86_64-linux-gnu/hdf5/serial -lhdf5_cpp")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-Ofast")
 
@@ -61,6 +61,12 @@ add_executable(test_datasets ${SOURCES_TEST_DATASET})
 add_executable(test_datasets_new ${SOURCES_TEST_DATASET_NEW})
 add_executable(test_datasets_for_k ${SOURCES_TEST_DATASETS_FOR_K})
 add_executable(test_polygon ${SOURCES_TEST_POLYGON})
+add_executable(test_polygons_mask 
+    globimap/globimap_test_polygons_mask.cpp
+)
+add_executable(globimap_rasterize_polys 
+    globimap/globimap_rasterize_polys.cpp
+)
 add_executable(test_cos ${SOURCES_TEST_COS})
 
 find_package(OpenMP)
@@ -83,6 +89,19 @@ PUBLIC HighFive
 PUBLIC OpenMP::OpenMP_CXX)
 
 target_link_libraries(test_polygon
+PUBLIC HighFive
+PUBLIC shp
+PUBLIC OpenMP::OpenMP_CXX
+)
+
+target_link_libraries(test_polygons_mask
+PUBLIC HighFive
+PUBLIC shp
+PUBLIC OpenMP::OpenMP_CXX
+stdc++fs
+)
+
+target_link_libraries(globimap_rasterize_polys
 PUBLIC HighFive
 PUBLIC shp
 PUBLIC OpenMP::OpenMP_CXX
