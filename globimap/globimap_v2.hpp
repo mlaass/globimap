@@ -534,6 +534,7 @@ struct Globimap {
     uint64_t sum = 0;
 #pragma omp parallel for
     for (auto i = 0; i < hashfn.size() - 1; i += 2) {
+#pragma omp atomic
       sum += get_min_hs(hashfn[i], hashfn[i + 1]);
     }
     return sum;
@@ -543,9 +544,12 @@ struct Globimap {
 #pragma omp parallel for
     for (auto i = 0; i < raster.size() - 1; i += 2) {
       coord_t p = {raster[i], raster[i + 1]};
+      uint64_t v = 0;
+      if (counter.count(p) != 0)
+        v = counter[p];
 
-      if (counter.count(p) > 0)
-        sum += counter[p];
+#pragma omp atomic
+      sum += v;
     }
     return sum;
   }
@@ -558,6 +562,7 @@ struct Globimap {
         for (auto &l : layers) {
           auto k = i & l.mask;
           auto v = l.template get<uint64_t>(k);
+#pragma omp atomic
           sum += v;
           if (!l.threshold(k)) {
             break;
@@ -565,7 +570,7 @@ struct Globimap {
         }
       }
     }
-    return sum / hashcount;
+    return sum / mask.hashcount;
   }
 
   uint64_t byte_size() {

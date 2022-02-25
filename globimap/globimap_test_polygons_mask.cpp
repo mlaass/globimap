@@ -101,9 +101,11 @@ test_polys_mask(globimap::Globimap<> &g, size_t poly_size,
   std::vector<uint32_t> errors_hash;
   std::vector<uint32_t> diff_mask_hash;
   std::vector<uint32_t> sizes;
+  std::vector<uint32_t> sums_mask;
+  std::vector<uint32_t> sums_hash;
+  std::vector<uint32_t> sums;
   std::vector<double> errors_mask_pc;
   std::vector<double> errors_hash_pc;
-  double sum_pc = 0, sum = 0, sum_sz = 0;
   int n = 0;
   std::cout << "polygons: " << poly_size << " ..." << std::endl;
   auto P = tq::trange(poly_size);
@@ -122,6 +124,11 @@ test_polys_mask(globimap::Globimap<> &g, size_t poly_size,
       auto res_raster = g.get_sum_raster_collected(raster);
       auto res_mask = g.get_sum_masked(mask);
       auto res_hashfn = g.get_sum_hashfn(raster);
+
+      sums.push_back(res_raster);
+      sums_mask.push_back(res_mask);
+      sums_hash.push_back(res_hashfn);
+
       uint64_t err_mask = std::abs((int64_t)res_mask - (int64_t)res_raster);
       uint64_t err_hash = std::abs((int64_t)res_hashfn - (int64_t)res_raster);
       uint64_t hash_mask_diff =
@@ -129,10 +136,18 @@ test_polys_mask(globimap::Globimap<> &g, size_t poly_size,
 
       errors_mask.push_back(err_mask);
       errors_hash.push_back(err_hash);
-      double err_mask_pc = ((double)err_mask) / ((double)raster.size() / 2);
-      double err_hash_pc = ((double)err_hash) / ((double)raster.size() / 2);
+
+      double div = (double)res_raster;
+      double err_mask_pc = ((double)err_mask) / div;
+      double err_hash_pc = ((double)err_hash) / div;
+      if (div == 0) {
+        err_mask_pc = (err_mask > 0 ? 1 : 0);
+        err_hash_pc = (err_hash > 0 ? 1 : 0);
+      }
+
       errors_mask_pc.push_back(err_mask_pc);
       errors_hash_pc.push_back(err_hash_pc);
+
       sizes.push_back(raster.size() / 2);
 
       n++;
@@ -146,6 +161,9 @@ test_polys_mask(globimap::Globimap<> &g, size_t poly_size,
   ss << render_stat("errors_hash_pc", errors_hash_pc) << ",\n";
   ss << render_stat("errors_mask", errors_mask) << ",\n";
   ss << render_stat("errors_hash", errors_hash) << ",\n";
+  ss << render_stat("sums", sums) << ",\n";
+  ss << render_stat("sums_mask", sums_mask) << ",\n";
+  ss << render_stat("sums_hash", sums_hash) << ",\n";
   ss << render_stat("sizes", sizes) << "\n";
 
   ss << "\n}" << std::endl;
@@ -157,8 +175,8 @@ static void encode_dataset(globimap::Globimap<> &g, const std::string &name,
                            const std::string &ds, uint width, uint height) {
   auto filename = base_path + ds;
   auto batch_size = 4096;
-  std::cout << "Start test_h5 encode with {fn: \"" << filename
-            << "\" } for: " << name << std::endl;
+  std::cout << "Encode \"" << filename << "\" \nwith cfg: " << name
+            << std::endl;
   using namespace HighFive;
 
   // we create a new hdf5 file
@@ -177,10 +195,10 @@ static void encode_dataset(globimap::Globimap<> &g, const std::string &name,
   std::vector<std::vector<double>> result;
   auto shape = dataset.getDimensions();
   int batches = std::floor(shape[0] / batch_size);
-  std::cout << "Start test_h5 encode with {fn: \"" << filename
-            << "\" } for: " << name << "\nbatches: " << batches
-            << "\nbatchsize: " << batch_size << std::endl;
-  for (auto i : tq::trange(batches)) {
+
+  auto R = tq::trange(batches);
+  R.set_prefix("encoding batches ");
+  for (auto i : R) {
     dataset.select({i * batch_size, 0}, {batch_size, 2}).read(result);
 
     for (auto p : result) {
@@ -195,7 +213,7 @@ static void encode_dataset(globimap::Globimap<> &g, const std::string &name,
 
 int main() {
   std::vector<std::vector<globimap::LayerConfig>> cfgs;
-  get_configurations(cfgs, {16, 20, 24, 28}, {1, 8, 16, 32, 64});
+  get_configurations(cfgs, {16, 20, 24}, {8, 16, 32});
 
   {
     uint k = 8;
@@ -206,7 +224,10 @@ int main() {
     mkdir((experiments_path + exp_name).c_str(), 0777);
     for (auto c : cfgs) {
       globimap::FilterConfig fc{k, c};
-      std::cout << "fc: " << fc.to_string() << std::endl;
+      std::cout << "\n******************************************"
+                << "\n******************************************" << std::endl;
+      std::cout << x << " / " << cfgs.size() << " fc: " << fc.to_string()
+                << std::endl;
       auto y = 0;
       for (auto shp : polygon_sets) {
         std::stringstream ss1;
@@ -233,7 +254,8 @@ int main() {
             std::ofstream out(fss.str());
             auto g = globimap::Globimap(fc, true);
             encode_dataset(g, fc.to_string(), ds, width, height);
-            std::cout << "encoding done!" << std::endl;
+            // g.detect_errors(0, 0, width, height);
+            std::cout << " COUNTER SIZE: " << g.counter.size() << std::endl;
             std::cout << "test: " << polyset_name << std::endl;
             out << test_polys_mask(g, poly_count, [&](int idx) {
               std::vector<uint64_t> raster;
@@ -253,6 +275,7 @@ int main() {
               return raster;
             });
             out.close();
+            std::cout << "\n" << std::endl;
           }
         }
         y++;
