@@ -64,8 +64,14 @@ add_executable(test_polygon ${SOURCES_TEST_POLYGON})
 add_executable(test_polygons_mask 
     globimap/globimap_test_polygons_mask.cpp
 )
+add_executable(print_poly_stats 
+    globimap/globimap_print_poly_stats.cpp
+)
 add_executable(globimap_rasterize_polys 
     globimap/globimap_rasterize_polys.cpp
+)
+add_executable(test_dataset_full_time 
+    globimap/globimap_test_dataset_full_time.cpp
 )
 add_executable(test_cos ${SOURCES_TEST_COS})
 
@@ -84,6 +90,10 @@ target_link_libraries(test_datasets_new
 PUBLIC HighFive
 PUBLIC OpenMP::OpenMP_CXX)
 
+target_link_libraries(test_dataset_full_time 
+PUBLIC HighFive
+PUBLIC OpenMP::OpenMP_CXX)
+
 target_link_libraries(test_datasets_for_k 
 PUBLIC HighFive
 PUBLIC OpenMP::OpenMP_CXX)
@@ -92,6 +102,13 @@ target_link_libraries(test_polygon
 PUBLIC HighFive
 PUBLIC shp
 PUBLIC OpenMP::OpenMP_CXX
+)
+
+target_link_libraries(print_poly_stats
+PUBLIC HighFive
+PUBLIC shp
+PUBLIC OpenMP::OpenMP_CXX
+stdc++fs
 )
 
 target_link_libraries(test_polygons_mask
