@@ -46,7 +46,8 @@ const std::string vector_base_path = "/home/moritz/tf/vector/";
 #endif
 
 std::vector<std::string> datasets{"twitter_1mio_coords.h5",
-                                  "twitter_10mio_coords.h5"};
+                                  "twitter_10mio_coords.h5",
+                                  "twitter_100mio_coords.h5"};
 
 // std::vector<std::string> datasets{"twitter_200mio_coords.h5",
 //                                   "asia_200mio_coords.h5"};
@@ -156,6 +157,7 @@ test_polys_mask(globimap::Globimap<> &g, size_t poly_size,
 
   std::stringstream ss;
   ss << "{\n";
+  ss << "\"summary\": " << g.summary() << ",\n";
   ss << "\"polygons\": " << n << ",\n";
   ss << render_stat("errors_mask_pc", errors_mask_pc) << ",\n";
   ss << render_stat("errors_hash_pc", errors_hash_pc) << ",\n";
@@ -219,7 +221,7 @@ int main() {
     uint k = 8;
     auto x = 0;
     uint width = 2 * 8192, height = 2 * 8192;
-    std::string exp_name = "test_polygons_mask";
+    std::string exp_name = "test_polygons_mask1";
     save_configs(experiments_path + std::string("config_") + exp_name, cfgs);
     mkdir((experiments_path + exp_name).c_str(), 0777);
     for (auto c : cfgs) {
