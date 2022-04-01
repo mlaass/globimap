@@ -1,4 +1,4 @@
-#include "counting_globimap.hpp"
+#include "globimap/counting_globimap.hpp"
 #include <chrono>
 #include <iostream>
 #include <math.h>

@@ -32,22 +32,23 @@ add_subdirectory(lib/HighFive/)
 add_subdirectory(lib/shapelib/)
 
 set(SOURCES_TEST_DATASET
-    globimap/globimap_test_dataset.cpp
+    experiments/src/globimap_test_dataset.cpp
 )
 set(SOURCES_TEST_DATASET_NEW
-    globimap/globimap_test_dataset_new.cpp
+    experiments/src/globimap_test_dataset_new.cpp
 )
 set(SOURCES_TEST_POLYGON
-    globimap/globimap_test_polygon.cpp
+    experiments/src/globimap_test_polygon.cpp
 )
 set(SOURCES_TEST_COS
-    globimap/globimap_test_cos.cpp
+    experiments/src/globimap_test_cos.cpp
 )
 set(SOURCES_TEST_DATASETS_FOR_K
-    globimap/globimap_test_datasets_for_k.cpp
+    experiments/src/globimap_test_datasets_for_k.cpp
 )
 
 include_directories(
+    .
    lib/HighFive/include/highfive
    lib/HighFive/include
    lib/tqdm.cpp/include
@@ -62,16 +63,16 @@ add_executable(test_datasets_new ${SOURCES_TEST_DATASET_NEW})
 add_executable(test_datasets_for_k ${SOURCES_TEST_DATASETS_FOR_K})
 add_executable(test_polygon ${SOURCES_TEST_POLYGON})
 add_executable(test_polygons_mask 
-    globimap/globimap_test_polygons_mask.cpp
+    experiments/src/globimap_test_polygons_mask.cpp
 )
 add_executable(print_poly_stats 
-    globimap/globimap_print_poly_stats.cpp
+    experiments/src/globimap_print_poly_stats.cpp
 )
 add_executable(globimap_rasterize_polys 
-    globimap/globimap_rasterize_polys.cpp
+    experiments/src/globimap_rasterize_polys.cpp
 )
 add_executable(test_dataset_full_time 
-    globimap/globimap_test_dataset_full_time.cpp
+    experiments/src/globimap_test_dataset_full_time.cpp
 )
 add_executable(test_cos ${SOURCES_TEST_COS})
 

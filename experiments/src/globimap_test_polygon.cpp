@@ -1,4 +1,4 @@
-#include "counting_globimap.hpp"
+#include "globimap/counting_globimap.hpp"
 #include "globimap_test_config.hpp"
 #include <chrono>
 #include <fstream>

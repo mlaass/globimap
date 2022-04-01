@@ -84,8 +84,9 @@ public:
                         ///< actually are large enough
   typedef std::set<std::pair<uint32_t, uint32_t>>
       error_container_t; // could be unordered_set dep. on your situation.
-private:
   std::vector<element_type> filter;
+
+private:
   int d;
   uint64_t mask;
 
@@ -170,7 +171,11 @@ public:
 #ifdef GLOBIMAP_COMPUTE_MAXHASH
     ss << "\"maxhash\":" << maxhash << "," << std::endl;
 #endif
-    ss << "\"storage:\": "
+    ss << "\"storage_b:\": " << static_cast<double>(filter.size()) / 8 << ","
+       << std::endl;
+    ss << "\"storage_kb:\": " << static_cast<double>(filter.size()) / 8 / 1024
+       << "," << std::endl;
+    ss << "\"storage_mb:\": "
        << static_cast<double>(filter.size()) / 8 / 1024 / 1024 << ","
        << std::endl;
     ss << "\"ones:\": " << ones << "," << std::endl;

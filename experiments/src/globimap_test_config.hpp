@@ -1,7 +1,7 @@
 
 #ifndef GLOBIMAP_TEST_CONFIG
 #define GLOBIMAP_TEST_CONFIG
-#include "counting_globimap.hpp"
+#include "globimap/counting_globimap.hpp"
 #include <chrono>
 #include <fstream>
 #include <iostream>

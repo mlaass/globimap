@@ -1,4 +1,4 @@
-#include "counting_globimap.hpp"
+#include "globimap/counting_globimap.hpp"
 #include <chrono>
 #include <fstream>
 #include <iostream>
@@ -76,44 +76,8 @@ static std::string test_encode(globimap::CountingGloBiMap<> &g,
        << std::endl;
   } else {
 
-    uint num_queries = 10000000;
-    std::vector<double> times;
-    double query_time_mean = 0;
-    double query_time_min = MAXFLOAT;
-    double query_time_max = 0;
-    for (auto j = 0; j < 10; j++) {
-
-      auto t5 = high_resolution_clock::now();
-      for (auto i = 0; i < num_queries; ++i) {
-        uint64_t x = rand() % width;
-        uint64_t y = rand() % height;
-        g.get_min({x, y});
-      }
-      auto t6 = high_resolution_clock::now();
-
-      duration<double, std::milli> query_time = t6 - t5;
-      double qt = query_time.count() / 1000.0;
-      query_time_mean += qt;
-      times.push_back(qt);
-      query_time_min = std::min(qt, query_time_min);
-      query_time_max = std::max(qt, query_time_max);
-    }
-    query_time_mean /= 10.0;
-
-    std::stringstream tss;
-    tss << "[";
-    for (auto it = 0; it < times.size(); it++) {
-      tss << times[it] << ((it == times.size() - 1) ? "" : ", ");
-    }
-    tss << "]";
-
     ss << "{\"summary\":" << g.summary() << ",\n";
-    ss << "\"perf\": {\"query_time\":" << query_time_mean << ",\n";
-    ss << "\"query_time_min\":" << query_time_min << ",\n";
-    ss << "\"query_time_max\":" << query_time_max << ",\n";
-    ss << "\"times\":" << tss.str() << ",\n";
-    ss << "\"num_queries\":" << num_queries << ",\n";
-    ss << "\"insert_time\": " << insert_time.count() / 1000.0 << "\n}}"
+    ss << "\"insert_time\": " << insert_time.count() / 1000.0 << "\n}"
        << std::endl;
   }
   return ss.str();
@@ -121,13 +85,13 @@ static std::string test_encode(globimap::CountingGloBiMap<> &g,
 
 int main() {
   config_t cfgs;
-  get_configurations(cfgs, {16, 20, 24}, {8, 16, 32});
+  get_configurations(cfgs, {16, 20, 24, 28}, {1, 8, 16, 32, 64});
 
   {
     uint k = 8;
     auto x = 0;
     uint width = 8192, height = 8192;
-    std::string exp_name = "test_datasets_new_3";
+    std::string exp_name = "test_datasets_with_errord";
     save_configs(experiments_path + std::string("config_") + exp_name, cfgs);
     mkdir((experiments_path + exp_name).c_str(), 0777);
     for (auto c : cfgs) {
@@ -137,8 +101,38 @@ int main() {
       for (auto d : datasets) {
         std::stringstream fss;
         fss << experiments_path << exp_name << "/" << exp_name << ".w" << width
-            << "h" << height << "."
-            << "-" << fc.to_string() << d << ".json";
+            << "h" << height << "." << std::setw(4) << std::setfill('0') << x
+            << "." << y << "-" << fc.to_string() << d << ".json";
+        if (file_exists(fss.str())) {
+          std::cout << "file already exists: " << fss.str() << std::endl;
+        } else {
+          std::cout << "run: " << fss.str() << std::endl;
+          std::ofstream out(fss.str());
+          auto g = globimap::CountingGloBiMap(fc, true);
+          out << test_encode(g, fc.to_string(), d, width, height, true);
+          out.close();
+        }
+        y++;
+      }
+      x++;
+    }
+  }
+  {
+    uint k = 8;
+    auto x = 0;
+    uint width = 8192, height = 8192;
+    std::string exp_name = "test_datasets";
+    save_configs(experiments_path + std::string("config_") + exp_name, cfgs);
+    mkdir((experiments_path + exp_name).c_str(), 0777);
+    for (auto c : cfgs) {
+      globimap::FilterConfig fc{k, c};
+      std::cout << "fc: " << fc.to_string() << std::endl;
+      auto y = 0;
+      for (auto d : datasets) {
+        std::stringstream fss;
+        fss << experiments_path << exp_name << "/" << exp_name << ".w" << width
+            << "h" << height << "." << std::setw(4) << std::setfill('0') << x
+            << "." << y << "-" << fc.to_string() << d << ".json";
         if (file_exists(fss.str())) {
           std::cout << "file already exists: " << fss.str() << std::endl;
         } else {

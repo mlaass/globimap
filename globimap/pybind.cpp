@@ -132,5 +132,17 @@ PYBIND11_MODULE(globimap, m) {
       .def("from_buffer",
            +[](globimap_t &self, py::array_t<uint8_t> buf) -> void {
              self.from_buffer(buf.data(), buf.size(), buf.size() * 8);
-           });
+           })
+      .def("get_filter",
+           +[](globimap_t &self) -> py::array_t<bool> {
+             return py::array_t<bool>(self.filter);
+           })
+      .def("get_filterf", +[](globimap_t &self) -> py::array_t<float> {
+        std::vector<float> res;
+        res.reserve(self.filter.size());
+        std::transform(self.filter.begin(), self.filter.end(),
+                       std::back_inserter(res),
+                       [](bool v) -> float { return v ? 1.0f : 0.0f; });
+        return py::array_t<float>(res);
+      });
 }
