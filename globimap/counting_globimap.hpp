@@ -375,7 +375,7 @@ struct FilterConfig {
 template <typename BITS1 = bool, typename BITS8 = uint8_t,
           typename BITS16 = uint16_t, typename BITS32 = uint32_t,
           typename BITS64 = uint64_t>
-struct Globimap {
+struct CountingGloBiMap {
   typedef std::pair<uint32_t, uint32_t> coord_t;
 
   typedef std::map<coord_t, uint32_t> coord_map_t;
@@ -389,7 +389,7 @@ struct Globimap {
   double error_rate;
   FilterConfig config;
 
-  Globimap(const FilterConfig &conf, bool collect = false)
+  CountingGloBiMap(const FilterConfig &conf, bool collect = false)
       : collect_input(collect) {
     hashcount = conf.hash_k;
     config = conf;
@@ -554,7 +554,7 @@ struct Globimap {
     return sum;
   }
 
-  uint64_t get_sum_masked(const Globimap &mask) {
+  uint64_t get_sum_masked(const CountingGloBiMap &mask) {
     uint64_t sum = 0;
 #pragma omp parallel for
     for (auto i = 0; i < layers[0].size; i++) {

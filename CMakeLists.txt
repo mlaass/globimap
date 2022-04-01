@@ -16,7 +16,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "-Ofast")
 include_directories(${SOURCE_DIR})
 
 set(PYBIND_SOURCES
-    globimap/globimap_pybind.cpp
+    globimap/pybind.cpp
 )
 
 # Generate Python module

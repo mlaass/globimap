@@ -76,103 +76,26 @@ parallel)
 
 #include <string.h>
 
-#ifdef GLOBIMAP_USE_MURMUR
-#include "murmur.hpp"
+#include "hashfn.hpp"
 
-#ifdef GLOBIMAP_USE_MURMUR_PREFIX
-inline void hash(uint64_t *data, size_t len, uint64_t *v1, uint64_t *v2,
-                 const char *prefix = "") {
-  uint64_t hash[2];
-  char buffer[1024];
-  snprintf(buffer, 1024, "%s-%lu-%lu", prefix, data[0], data[1]);
-  murmur::MurmurHash3_x86_128(data, strlen(buffer), *v1,
-                              (void *)hash); // len * sizeof(uint64_t)
-  *v1 = hash[0];
-  *v2 = hash[1];
-}
-#else
-inline void hash(const uint64_t *data, const size_t len, uint64_t *v1,
-                 uint64_t *v2) {
-  uint64_t hash[2];
-  /*    char buffer[1024];
-      snprintf(buffer, 1024,"%s-%lu-%lu", prefix,data[0],data[1]);*/
-  murmur::MurmurHash3_x86_128(data, 16, *v1,
-                              (void *)hash); // len*sizeof(uint64_t)
-  *v1 = hash[0];
-  *v2 = hash[1];
-}
-
-#endif
-#endif
-
-#ifdef GLOBIMAP_USE_DJB64
-
-// This should not be used, it would need careful evaluation on many layers.
-// Stays here for completeness!!!
-
-inline void hash(uint32_t *data, size_t len, uint32_t *v1, uint32_t *v2) {
-  const char *prefix1 = "p1";
-  const char *prefix2 = "x8";
-  char *str = reinterpret_cast<char *>(data);
-  uint32_t hash1 = 5381;
-  uint32_t hash2 = 5381;
-  for (size_t i = 0; i < 2; i++) {
-    hash1 = ((hash1 << 5) + hash1) + prefix1[i]; /* hash * 33 + c */
-    hash2 = ((hash2 << 5) + hash2) + prefix2[i]; /* hash * 33 + c */
-  }
-
-  for (size_t i = 0; i < len * sizeof(uint32_t); i++) {
-    hash1 = ((hash1 << 5) + hash1) + *str; /* hash * 33 + c */
-    hash2 = ((hash2 << 5) + hash2) + *str; /* hash * 33 + c */
-    str++;
-  }
-  //    *v1 = static_cast<uint32_t>((hash & 0xFFFFFFFF00000000LL) >> 32);
-  //    *v2 = static_cast<uint32_t>(hash & 0xFFFFFFFFLL) ;
-  *v1 = hash1;
-  *v2 = hash2;
-}
-#endif
-
-#ifdef GLOBIMAP_USE_LOOKUP3
-// This should not be used, it would need careful evaluation on many layers. Not
-// published, google for lookup3.h ;-)
-#include "lookup3.hpp"
-
-inline void hash(uint32_t *data, size_t len, uint32_t *v1, uint32_t *v2) {
-  hashword2(data, len, v1, v2);
-}
-#endif
-
-template <typename T = uint8_t, typename OT = uint32_t> class GloBiMap {
+template <typename element_type = bool> class GloBiMap {
 public:
-  static const uint THRESHOLD = 250;
   uint64_t maxhash = 0; ///< was used for debugging that the hash numbers
                         ///< actually are large enough
   typedef std::set<std::pair<uint32_t, uint32_t>>
       error_container_t; // could be unordered_set dep. on your situation.
 private:
-  std::vector<OT> overflow;
-  std::vector<T> filter;
-  uint64_t num_hash;
+  std::vector<element_type> filter;
+  int d;
   uint64_t mask;
-  uint64_t mask_overflow;
-
-  T tanh_lookup[256];
 
 protected:
-  std::vector<uint32_t> storage;
+  std::vector<double> storage;
   error_container_t errors;
 
 public:
-  GloBiMap() {
-    for (double i = 0; i < 256; ++i) {
-      tanh_lookup[(int)i] = (T)((1 + tanh((i / 32.0) - 4.0)) * 256.0);
-      std::cout << (int)tanh_lookup[(int)i] << ",";
-    }
-  }
   void clear() {
     filter.clear();
-    overflow.clear();
     errors.clear();
   }
 
@@ -189,7 +112,7 @@ public:
     uint64_t h1 = 8589845122, h2 = 8465418721;
     double maxp = 0;
     hash(&a[0], 2, &h1, &h2);
-    for (size_t i = 0; i < static_cast<size_t>(num_hash); i++) {
+    for (size_t i = 0; i < static_cast<size_t>(d); i++) {
       uint64_t k = (h1 + (i + 1) * h2) & mask;
 
 #ifdef GLOBIMAP_COMPUTE_MAXHASH
@@ -211,141 +134,34 @@ public:
     std::cout << std::endl;
 #endif
   }
-
-  void put_v(std::vector<uint64_t> a) {
-    //    std::cout << "put" << a[0] << ";" << a[1] <<";";
-
-    // get the two hashs:
-    uint64_t h1 = 8589845122, h2 = 8465418721;
-    double maxp = 0;
-    hash(&a[0], 2, &h1, &h2);
-    for (size_t i = 0; i < static_cast<size_t>(num_hash); i++) {
-      uint64_t k = (h1 + (i + 1) * h2) & mask;
-
-#ifdef GLOBIMAP_COMPUTE_MAXHASH
-      if (k > maxhash)
-        maxhash = k;
-#endif
-//       std::cout << "put: k=" << k << std::endl;
-#ifdef DEBUG_HASH_PUT
-      if (static_cast<long double>(k) / mask > maxp)
-        maxp = static_cast<long double>(k) / mask;
-#pragma omp critical
-      std::cout << k << "(;" << static_cast<long double>(k) / mask << ") => "
-                << maxp << std::endl;
-#endif
-#pragma omp critical
-      if (filter[k] == THRESHOLD) {
-        uint64_t k2 = (h1 + (i + 1) * h2) & mask_overflow;
-        overflow[k2] += 1;
-      } else {
-        filter[k] += 1;
-      }
-    }
-#ifdef DEBUG_HASH_PUT
-    std::cout << std::endl;
-#endif
-  }
-
   bool get(std::vector<uint64_t> a) {
     //    std::cout << "GET for " << a[0] << "/" << a[1] << std::endl;
     uint64_t h1 = 8589845122, h2 = 8465418721;
     hash(&a[0], 2, &h1, &h2);
-    for (size_t i = 0; i < static_cast<size_t>(num_hash); i++) {
+    for (size_t i = 0; i < static_cast<size_t>(d); i++) {
       uint64_t k = (h1 + (i + 1) * h2) & mask;
       if (filter[k] == 0)
         return false;
     }
     return true;
   }
-  uint64_t get_v_mean(std::vector<uint64_t> a) {
-    //    std::cout << "GET for " << a[0] << "/" << a[1] << std::endl;
 
-    uint64_t sum = 0;
-
-    uint64_t h1 = 8589845122, h2 = 8465418721;
-    hash(&a[0], 2, &h1, &h2);
-    for (size_t i = 0; i < static_cast<size_t>(num_hash); i++) {
-      uint64_t k = (h1 + (i + 1) * h2) & mask;
-      uint64_t v = static_cast<uint64_t>(filter[k]);
-      if (v == 0) {
-        return v;
-      }
-      if (v == THRESHOLD) {
-        uint64_t k2 = (h1 + (i + 1) * h2) & mask_overflow;
-        v = THRESHOLD + static_cast<uint64_t>(overflow[k2]);
-      }
-
-      sum += v;
-    }
-    return sum / num_hash;
-  }
-
-  uint64_t get_v_mean_tanh(std::vector<uint64_t> a) {
-    return tanh_lookup[get_v_mean(a)];
-  }
-
-  uint64_t get_v_bins(std::vector<uint64_t> a) {
-    //    std::cout << "GET for " << a[0] << "/" << a[1] << std::endl;
-
-    std::unordered_map<uint64_t, uint8_t> bins;
-    uint64_t max_v = 0;
-    auto max_it = bins.end();
-
-    uint64_t h1 = 8589845122, h2 = 8465418721;
-    hash(&a[0], 2, &h1, &h2);
-    for (size_t i = 0; i < static_cast<size_t>(num_hash); i++) {
-      uint64_t k = (h1 + (i + 1) * h2) & mask;
-      auto v = filter[k];
-      if (v == THRESHOLD) {
-        uint64_t k2 = (h1 + (i + 1) * h2) & mask_overflow;
-        v = THRESHOLD + static_cast<uint64_t>(overflow[k2]);
-      }
-      if (v == 0) {
-        return v;
-      }
-      auto bin = bins.find(v);
-      if (bin != bins.end()) {
-        bin->second++;
-      } else {
-        bin = bins.insert({v, 1}).first;
-      }
-      if (bin->second > max_v) {
-        max_v = bin->second;
-        max_it = bin;
-      }
-    }
-    return max_it->first;
-  }
-
-  void configure(size_t hash_count, size_t log_size, size_t overflow_log_size) {
-    num_hash = hash_count;
-    mask = (static_cast<uint64_t>(1) << log_size) - 1;
-    mask_overflow = (static_cast<uint64_t>(1) << overflow_log_size) - 1;
-    std::cout << "log_size = " << log_size << " mask = " << mask << std::hex
-              << "0x" << mask << std::dec << std::endl;
+  void configure(size_t _d, size_t logm) {
+    d = _d;
+    mask = (static_cast<uint64_t>(1) << logm) - 1;
+    std::cout << "logm:" << logm << "mask=" << mask << std::hex << "0x" << mask
+              << std::dec << std::endl;
     filter.resize(mask + 1);
-    overflow.resize(mask_overflow + 1);
-    std::cout << "filter.size = " << filter.size() << std::endl;
-    std::cout << "overflow.size = " << overflow.size() << std::endl;
+    std::cout << "filter.size=" << filter.size() << std::endl;
   }
 
   std::string summary() {
     size_t ones = 0;
-    size_t zeros = 0;
-    uint64_t sum = 0;
-    uint64_t max = 0;
 #pragma omp parallel for
     for (size_t i = 0; i < filter.size(); i++) {
-      sum += filter[i];
-      if (filter[i] > max)
-        max = filter[i];
-      if (filter[i] == 1) {
+      if (filter[i] == 1)
 #pragma omp atomic
         ones++;
-      } else if (filter[i] == 0) {
-        zeros++;
-      }
     }
     std::stringstream ss;
     //       ss << std::hex << t1 << std::endl << t2 << std::endl << t3 <<
@@ -354,15 +170,11 @@ public:
 #ifdef GLOBIMAP_COMPUTE_MAXHASH
     ss << "\"maxhash\":" << maxhash << "," << std::endl;
 #endif
-    ss << "\"filtersize\": " << static_cast<uint64_t>(filter.size()) << ","
+    ss << "\"storage:\": "
+       << static_cast<double>(filter.size()) / 8 / 1024 / 1024 << ","
        << std::endl;
-    ss << "\"ones\": " << ones << "," << std::endl;
-    ss << "\"zeros\": " << zeros << "," << std::endl;
-    ss << "\"sum\": " << sum << "," << std::endl;
-    ss << "\"max\": " << max << "," << std::endl;
-    ss << "\"mean\": " << (static_cast<double>(sum) / filter.size()) << ","
-       << std::endl;
-    ss << "\"foz\": "
+    ss << "\"ones:\": " << ones << "," << std::endl;
+    ss << "\"foz:\": "
        << static_cast<double>((filter.size() - ones)) / (double)filter.size()
        << "," << std::endl;
     ss << "\"eci\": " << errors.size() << std::endl;
@@ -370,32 +182,19 @@ public:
     return ss.str();
   }
 
-  std::vector<uint32_t> &rasterize(uint64_t x, uint64_t y, uint32_t s0,
-                                   uint32_t s1) {
+  std::vector<double> &rasterize(uint64_t x, uint64_t y, uint32_t s0,
+                                 uint32_t s1) {
     storage.resize(s0 * s1);
 #pragma omp parallel for
-    for (uint32_t j = 0; j < s1; j++) {
-      for (uint32_t i = 0; i < s0; i++) {
-        storage[j * s0 + i] = get({x + i, y + j});
+    for (uint32_t i = 0; i < s0; i++)
+      for (uint32_t j = 0; j < s1; j++) {
+        storage[i * s1 + j] = get({x + i, y + j});
       }
-    }
     return storage;
   }
 
-  std::vector<uint32_t> &rasterize_v_mean(uint64_t x, uint64_t y, uint32_t s0,
-                                          uint32_t s1) {
-    storage.resize(s0 * s1);
-#pragma omp parallel for
-    for (uint32_t j = 0; j < s1; j++) {
-      for (uint32_t i = 0; i < s0; i++) {
-        storage[(s1 - (j + 1)) * s0 + i] = get_v_mean({x + i, y + j});
-      }
-    }
-    return storage;
-  }
-
-  std::vector<uint32_t> &apply_correction(uint32_t x, uint32_t y, uint32_t s0,
-                                          uint32_t s1) {
+  std::vector<double> &apply_correction(uint32_t x, uint32_t y, uint32_t s0,
+                                        uint32_t s1) {
     // apply corrections over storage
     if (storage.size() != s0 * s1)
       throw(std::runtime_error("corrections can only be applied after "
@@ -446,6 +245,17 @@ processing is parallel
           filter[k++] = ch & (1 << j);
     }
   }
+  void _frombuffer(std::string &buf, size_t n) {
+    filter.resize(n);
+    size_t k = 0;
+    for (size_t i = 0; i < buf.size(); i++) {
+      char ch = buf[i];
+      for (size_t j = 0; j < 8; j++)
+        if (k < n)
+          filter[k++] = ch & (1 << j);
+    }
+  }
+
   void _frombuffer(std::string &buf) {
     size_t k = 0;
     auto n = filter.size();

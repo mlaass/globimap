@@ -1,4 +1,4 @@
-#include "globimap_v2.hpp"
+#include "counting_globimap.hpp"
 #include <chrono>
 #include <iostream>
 #include <math.h>
@@ -98,8 +98,9 @@ configs_to_string(std::vector<std::vector<globimap::LayerConfig>> cfgs) {
   return ss.str();
 }
 
-static std::string test_encode(globimap::Globimap<> &g, const std::string &name,
-                               const std::string &ds, uint width, uint height) {
+static std::string test_encode(globimap::CountingGloBiMap<> &g,
+                               const std::string &name, const std::string &ds,
+                               uint width, uint height) {
   auto filename = base_path + ds;
   auto batch_size = 4096;
   std::cout << "Start test_h5 encode with {fn: \"" << filename
@@ -149,8 +150,9 @@ static std::string test_encode(globimap::Globimap<> &g, const std::string &name,
   return ss.str();
 }
 
-static std::string test_cos(globimap::Globimap<> &g, const std::string &name,
-                            uint width, uint height, uint limit) {
+static std::string test_cos(globimap::CountingGloBiMap<> &g,
+                            const std::string &name, uint width, uint height,
+                            uint limit) {
   std::cout << "Start cos with {w: " << width << ", h: " << height
             << ", limit: " << limit << " } for: " << name << std::endl;
 
@@ -207,7 +209,7 @@ int main() {
       }
       std::cout << "run: " << fss.str() << std::endl;
       std::ofstream out(fss.str());
-      auto g = globimap::Globimap(fc, true);
+      auto g = globimap::CountingGloBiMap(fc, true);
       out << test_cos(g, fc.to_string(), 8192, 8192, 65536);
       out.close();
       x++;
@@ -233,7 +235,7 @@ int main() {
         }
         std::cout << "run: " << fss.str() << std::endl;
         std::ofstream out(fss.str());
-        auto g = globimap::Globimap(fc, true);
+        auto g = globimap::CountingGloBiMap(fc, true);
         out << test_encode(g, fc.to_string(), d, width, height);
         out.close();
       }
@@ -250,9 +252,9 @@ int main1() {
             << ", 64 BIT: " << THRESHOLD_64BIT << std::endl;
   std::cout << "Start! Tests" << std::endl;
 
-  // auto g1 = globimap::Globimap(8, {1, 8, 16}, {16, 16, 16});
-  // auto g2 = globimap::Globimap(8, {8, 32}, {16, 16});
-  // auto g3 = globimap::Globimap(8, {1, 8, 32}, {16, 16, 16}, true);
+  // auto g1 = globimap::CountingGloBiMap(8, {1, 8, 16}, {16, 16, 16});
+  // auto g2 = globimap::CountingGloBiMap(8, {8, 32}, {16, 16});
+  // auto g3 = globimap::CountingGloBiMap(8, {1, 8, 32}, {16, 16, 16}, true);
 
   // std::cout << "**********************************************" << std::endl;
   // test_cos(g1, "G1", pow(2, 12), pow(2, 12), pow(2, 24));

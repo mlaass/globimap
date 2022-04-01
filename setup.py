@@ -66,9 +66,10 @@ class CMakeBuild(build_ext):
                               cwd=self.build_temp)
         print()  # Add an empty line for cleaner output
 
+
 setup(
     name='globimap',
-    version='0.1.1',
+    version='0.1.2',
     author='Martin Werner, Moritz Laass',
     author_email='moritz.laass@tum.de',
     description='GloBiMap is a probabilistic data structure to compress sparse spatial data using bloom filters.',

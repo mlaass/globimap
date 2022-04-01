@@ -1,5 +1,5 @@
+#include "counting_globimap.hpp"
 #include "globimap_test_config.hpp"
-#include "globimap_v2.hpp"
 #include <algorithm>
 #include <chrono>
 #include <filesystem>

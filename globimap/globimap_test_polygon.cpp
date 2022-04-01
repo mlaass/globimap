@@ -1,5 +1,5 @@
+#include "counting_globimap.hpp"
 #include "globimap_test_config.hpp"
-#include "globimap_v2.hpp"
 #include <chrono>
 #include <fstream>
 #include <iostream>
@@ -108,7 +108,7 @@ std::vector<polygon_t> get_polygons_trans(const std::string &shapefile,
   return polys;
 }
 
-std::string test_polys(globimap::Globimap<> &g,
+std::string test_polys(globimap::CountingGloBiMap<> &g,
                        const std::vector<polygon_t> &polys) {
   std::vector<uint32_t> errors;
   std::vector<uint32_t> sizes;
@@ -174,8 +174,9 @@ std::string test_polys(globimap::Globimap<> &g,
   return ss.str();
 }
 
-static void encode_dataset(globimap::Globimap<> &g, const std::string &name,
-                           const std::string &ds, uint width, uint height) {
+static void encode_dataset(globimap::CountingGloBiMap<> &g,
+                           const std::string &name, const std::string &ds,
+                           uint width, uint height) {
   auto filename = base_path + ds;
   auto batch_size = 4096;
   std::cout << "Start test_h5 encode with {fn: \"" << filename
@@ -256,7 +257,7 @@ int main() {
           } else {
             std::cout << "run: " << fss.str() << std::endl;
             std::ofstream out(fss.str());
-            auto g = globimap::Globimap(fc, true);
+            auto g = globimap::CountingGloBiMap(fc, true);
             encode_dataset(g, fc.to_string(), ds, width, height);
             std::cout << "encoding done!" << std::endl;
             std::cout << "test:" << shp << std::endl;

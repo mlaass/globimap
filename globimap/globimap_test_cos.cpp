@@ -1,4 +1,4 @@
-#include "globimap_v2.hpp"
+#include "counting_globimap.hpp"
 #include <chrono>
 #include <iostream>
 #include <math.h>
@@ -17,8 +17,9 @@
 const std::string base_path = "/home/moritz/tf/pointclouds_2d/data/";
 const std::string experiments_path = "/home/moritz/tf/globimap/experiments/";
 
-static std::string test_cos(globimap::Globimap<> &g, const std::string &name,
-                            uint width, uint height, uint limit, bool errord) {
+static std::string test_cos(globimap::CountingGloBiMap<> &g,
+                            const std::string &name, uint width, uint height,
+                            uint limit, bool errord) {
   std::cout << "Start cos with {w: " << width << ", h: " << height
             << ", limit: " << limit << " } for: " << name << std::endl;
 
@@ -88,7 +89,7 @@ int main() {
       } else {
         std::cout << "run: " << fss.str() << std::endl;
         std::ofstream out(fss.str());
-        auto g = globimap::Globimap(fc, true);
+        auto g = globimap::CountingGloBiMap(fc, true);
         out << test_cos(g, fc.to_string(), 8192, 8192, 65536, true);
         out.close();
         x++;
@@ -115,7 +116,7 @@ int main() {
       }
       std::cout << "run: " << fss.str() << std::endl;
       std::ofstream out(fss.str());
-      auto g = globimap::Globimap(fc, false);
+      auto g = globimap::CountingGloBiMap(fc, false);
       out << test_cos(g, fc.to_string(), 8192, 8192, 65536, false);
       out.close();
       x++;

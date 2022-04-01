@@ -1,4 +1,4 @@
-#include "globimap_v2.hpp"
+#include "counting_globimap.hpp"
 #include <chrono>
 #include <fstream>
 #include <iostream>
@@ -18,9 +18,9 @@ std::vector<std::string> datasets{
     "twitter_100mio_coords.h5", "twitter_200mio_coords.h5",
     "asia_200mio_coords.h5", "asia_500mio_coords.h5"};
 
-static std::string test_encode(globimap::Globimap<> &g, const std::string &name,
-                               const std::string &ds, uint width, uint height,
-                               bool errord) {
+static std::string test_encode(globimap::CountingGloBiMap<> &g,
+                               const std::string &name, const std::string &ds,
+                               uint width, uint height, bool errord) {
   auto filename = base_path + ds;
   auto batch_size = 4096;
   std::cout << "Start test_h5 encode with {fn: \"" << filename
@@ -116,7 +116,7 @@ int main() {
           } else {
             std::cout << "run: " << fss.str() << std::endl;
             std::ofstream out(fss.str());
-            auto g = globimap::Globimap(fc, true);
+            auto g = globimap::CountingGloBiMap(fc, true);
             out << test_encode(g, fc.to_string(), d, width, height, true);
             out.close();
           }

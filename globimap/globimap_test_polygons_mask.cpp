@@ -1,5 +1,5 @@
+#include "counting_globimap.hpp"
 #include "globimap_test_config.hpp"
-#include "globimap_v2.hpp"
 #include <algorithm>
 #include <chrono>
 #include <filesystem>
@@ -96,7 +96,7 @@ std::string render_stat(const std::string &name, std::vector<T> stat) {
 }
 
 std::string
-test_polys_mask(globimap::Globimap<> &g, size_t poly_size,
+test_polys_mask(globimap::CountingGloBiMap<> &g, size_t poly_size,
                 std::function<std::vector<uint64_t>(size_t)> poly_gen) {
   std::vector<uint32_t> errors_mask;
   std::vector<uint32_t> errors_hash;
@@ -119,7 +119,7 @@ test_polys_mask(globimap::Globimap<> &g, size_t poly_size,
 
       auto mask_conf = globimap::FilterConfig{
           g.config.hash_k, {{1, g.config.layers[0].logsize}}};
-      auto mask = globimap::Globimap(mask_conf, false);
+      auto mask = globimap::CountingGloBiMap(mask_conf, false);
       mask.put_all(raster);
 
       auto res_raster = g.get_sum_raster_collected(raster);
@@ -173,8 +173,9 @@ test_polys_mask(globimap::Globimap<> &g, size_t poly_size,
   return ss.str();
 }
 
-static void encode_dataset(globimap::Globimap<> &g, const std::string &name,
-                           const std::string &ds, uint width, uint height) {
+static void encode_dataset(globimap::CountingGloBiMap<> &g,
+                           const std::string &name, const std::string &ds,
+                           uint width, uint height) {
   auto filename = base_path + ds;
   auto batch_size = 4096;
   std::cout << "Encode \"" << filename << "\" \nwith cfg: " << name
@@ -254,7 +255,7 @@ int main() {
           } else {
             std::cout << "run: " << fss.str() << std::endl;
             std::ofstream out(fss.str());
-            auto g = globimap::Globimap(fc, true);
+            auto g = globimap::CountingGloBiMap(fc, true);
             encode_dataset(g, fc.to_string(), ds, width, height);
             // g.detect_errors(0, 0, width, height);
             std::cout << " COUNTER SIZE: " << g.counter.size() << std::endl;
