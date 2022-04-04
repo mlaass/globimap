@@ -66,6 +66,7 @@ parallel)
 #include <list>
 #include <set>
 #include <sstream>
+#include <tuple>
 #include <unordered_set>
 #include <vector>
 
@@ -106,13 +107,14 @@ public:
     errors.emplace(std::make_pair(a[0], a[1]));
   }
 
-  void put(std::vector<uint64_t> a) {
+  void put(std::vector<uint64_t> a) { return putp(&a[0]); }
+  void putp(uint64_t *a) {
     //    std::cout << "put" << a[0] << ";" << a[1] <<";";
 
     // get the two hashs:
     uint64_t h1 = 8589845122, h2 = 8465418721;
     double maxp = 0;
-    hash(&a[0], 2, &h1, &h2);
+    hash(a, 2, &h1, &h2);
     for (size_t i = 0; i < static_cast<size_t>(d); i++) {
       uint64_t k = (h1 + (i + 1) * h2) & mask;
 
@@ -135,10 +137,12 @@ public:
     std::cout << std::endl;
 #endif
   }
-  bool get(std::vector<uint64_t> a) {
+
+  bool get(std::vector<uint64_t> a) { return getp(&a[0]); }
+  bool getp(uint64_t *a) {
     //    std::cout << "GET for " << a[0] << "/" << a[1] << std::endl;
     uint64_t h1 = 8589845122, h2 = 8465418721;
-    hash(&a[0], 2, &h1, &h2);
+    hash(a, 2, &h1, &h2);
     for (size_t i = 0; i < static_cast<size_t>(d); i++) {
       uint64_t k = (h1 + (i + 1) * h2) & mask;
       if (filter[k] == 0)
@@ -150,13 +154,13 @@ public:
   void configure(size_t _d, size_t logm) {
     d = _d;
     mask = (static_cast<uint64_t>(1) << logm) - 1;
-    std::cout << "logm:" << logm << "mask=" << mask << std::hex << "0x" << mask
-              << std::dec << std::endl;
+    // std::cout << "logm:" << logm << "mask=" << std::hex << "0x" <<
+    // mask << std::dec << std::endl;
     filter.resize(mask + 1);
-    std::cout << "filter.size=" << filter.size() << std::endl;
+    // std::cout << "filter.size=" << filter.size() << std::endl;
   }
 
-  std::string summary() {
+  std::tuple<double, double> stats() {
     size_t ones = 0;
 #pragma omp parallel for
     for (size_t i = 0; i < filter.size(); i++) {
@@ -164,6 +168,13 @@ public:
 #pragma omp atomic
         ones++;
     }
+    return std::make_tuple(static_cast<double>(ones),
+                           static_cast<double>((filter.size() - ones)) /
+                               (double)filter.size());
+  }
+
+  std::string summary() {
+    auto st = stats();
     std::stringstream ss;
     //       ss << std::hex << t1 << std::endl << t2 << std::endl << t3 <<
     //       std::endl << std::dec;
@@ -178,10 +189,8 @@ public:
     ss << "\"storage_mb:\": "
        << static_cast<double>(filter.size()) / 8 / 1024 / 1024 << ","
        << std::endl;
-    ss << "\"ones:\": " << ones << "," << std::endl;
-    ss << "\"foz:\": "
-       << static_cast<double>((filter.size() - ones)) / (double)filter.size()
-       << "," << std::endl;
+    ss << "\"ones:\": " << std::get<0>(st) << "," << std::endl;
+    ss << "\"foz:\": " << std::get<1>(st) << "," << std::endl;
     ss << "\"eci\": " << errors.size() << std::endl;
     ss << "}" << std::endl;
     return ss.str();

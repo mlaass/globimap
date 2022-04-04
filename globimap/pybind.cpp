@@ -4,6 +4,7 @@
 #include <iostream>
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
@@ -23,6 +24,14 @@ static py::array_t<T> wrap2D(T *data, size_t w, size_t h) {
 
   return py::array_t<T, py::array::forcecast | py::array::c_style>(
       shape, strides, data, caps);
+}
+template <typename T> static py::array_t<T> wrap1D(T *data, size_t s) {
+
+  auto shape = {s};
+  auto strides = std::vector<size_t>({sizeof(T)});
+
+  return py::array_t<T, py::array::forcecast | py::array::c_style>(
+      shape, strides, data);
 }
 
 // This template is a handy tool to call a function f(i,j,value) for each entry
@@ -89,9 +98,19 @@ PYBIND11_MODULE(globimap, m) {
            +[](globimap_t &self, uint32_t x, uint32_t y) {
              self.put({x, y});
            })
+      .def("put",
+           +[](globimap_t &self, uint32_t x, uint32_t y, uint32_t z) {
+             std::vector<uint32_t> a = {x, y, z, 0};
+             self.putp((uint64_t *)&a[0]);
+           })
       .def("get",
            +[](globimap_t &self, uint32_t x, uint32_t y) -> bool {
              return self.get({x, y});
+           })
+      .def("get",
+           +[](globimap_t &self, uint32_t x, uint32_t y, uint32_t z) -> bool {
+             std::vector<uint32_t> a = {x, y, z, 0};
+             return self.getp((uint64_t *)&a[0]);
            })
       .def("configure",
            +[](globimap_t &self, size_t k, size_t m) { self.configure(k, m); })
@@ -133,16 +152,19 @@ PYBIND11_MODULE(globimap, m) {
            +[](globimap_t &self, py::array_t<uint8_t> buf) -> void {
              self.from_buffer(buf.data(), buf.size(), buf.size() * 8);
            })
-      .def("get_filter",
-           +[](globimap_t &self) -> py::array_t<bool> {
-             return py::array_t<bool>(self.filter);
-           })
+      .def("get_filter", +[](globimap_t &self) { return self.filter; })
+      .def("stats", +[](globimap_t &self) { return self.stats(); })
+      // .def("get_filter_np",
+      //      +[](globimap_t &self) -> py::array_t<bool> {
+      //        return wrap1D<bool>(&self.filter[0], self.filter.size());
+      //      })
       .def("get_filterf", +[](globimap_t &self) -> py::array_t<float> {
-        std::vector<float> res;
-        res.reserve(self.filter.size());
-        std::transform(self.filter.begin(), self.filter.end(),
-                       std::back_inserter(res),
-                       [](bool v) -> float { return v ? 1.0f : 0.0f; });
-        return py::array_t<float>(res);
+        py::array_t<float, py::array::c_style> a({self.filter.size()});
+        auto r = a.mutable_unchecked();
+
+        for (py::ssize_t i = 0; i < r.shape(0); i++) {
+          r(i) = self.filter[i] ? 1.0f : 0.0f;
+        }
+        return a;
       });
 }
